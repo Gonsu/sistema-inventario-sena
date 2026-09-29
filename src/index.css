@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-sena-bg font-data text-gray-800 antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-title font-bold text-sena-header;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-sena-card-border bg-sena-card p-5 shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-input px-4 py-2 font-title text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-sena-primary text-white hover:bg-sena-primary-hover;
+  }
+  .btn-secondary {
+    @apply btn bg-sena-secondary text-white hover:bg-sena-secondary-hover;
+  }
+  .btn-outline {
+    @apply btn border border-sena-primary text-sena-primary hover:bg-sena-primary hover:text-white;
+  }
+  .input {
+    @apply w-full rounded-input border border-sena-card-border bg-white px-3 py-2 font-data text-sm outline-none focus:border-sena-primary focus:ring-2 focus:ring-sena-primary/30;
+  }
+  .label {
+    @apply mb-1 block font-title text-xs font-semibold uppercase tracking-wide text-sena-header;
+  }
+  .table-base {
+    @apply w-full border-collapse text-left font-data text-sm;
+  }
+  .table-base thead th {
+    @apply sticky top-0 bg-sena-header px-3 py-2 font-title text-xs font-semibold uppercase tracking-wide text-white;
+  }
+  .table-base tbody td {
+    @apply border-b border-sena-card-border px-3 py-2 align-middle;
+  }
+  .table-base tbody tr:hover {
+    @apply bg-white/60;
+  }
+}
