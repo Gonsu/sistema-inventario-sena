@@ -19,8 +19,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Caché de TypeScript / Vite
-*.tsbuildinfo
+# Caché de Vite
 .vite/
 
 # Editores y sistema operativo
