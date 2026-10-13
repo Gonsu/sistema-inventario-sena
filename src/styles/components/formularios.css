@@ -1,0 +1,11 @@
+/* Campos de los formularios: cajas de texto, selects y sus etiquetas. */
+@layer components {
+  .input {
+    @apply w-full rounded-input border border-sena-card-border bg-white px-3 py-2 font-data text-sm outline-none focus:border-sena-primary focus:ring-2 focus:ring-sena-primary/30;
+  }
+
+  /* Texto pequeño en mayúsculas que va encima de cada campo */
+  .label {
+    @apply mb-1 block font-title text-xs font-semibold uppercase tracking-wide text-sena-header;
+  }
+}

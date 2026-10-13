@@ -1,14 +1,27 @@
+// Importar herramientas básicas de React
 import { useMemo, useState } from 'react';
-import { coincide } from '../../utils/format';
-import { CantidadBadge, EmptyState, SearchInput, SectionCard } from '../ui/Primitives';
 
-export function MisMaterialesTable({ materiales }) {
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { coincide } from '../../utils/format';
+
+// Importar componentes visuales reutilizables
+import CantidadBadge from '../ui/CantidadBadge';
+import EmptyState from '../ui/EmptyState';
+import SearchInput from '../ui/SearchInput';
+import SectionCard from '../ui/SectionCard';
+
+// Tabla con los materiales que el instructor tiene asignados en este momento.
+// Incluye un buscador por nombre o código.
+function MisMaterialesTable({ materiales }) {
+  // Texto del buscador
   const [busqueda, setBusqueda] = useState('');
+  // Materiales que coinciden con la búsqueda
   const filtrados = useMemo(
     () => materiales.filter((m) => coincide(busqueda, m.nombre, m.codigo)),
     [materiales, busqueda],
   );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <SectionCard
       titulo="Mis Materiales Asignados"
@@ -26,6 +39,7 @@ export function MisMaterialesTable({ materiales }) {
         <EmptyState mensaje={`Sin resultados para "${busqueda}"`} />
       ) : (
         <div className="max-h-80 overflow-auto rounded-input">
+          {/* Tabla de materiales */}
           <table className="table-base">
             <thead>
               <tr>
@@ -51,3 +65,5 @@ export function MisMaterialesTable({ materiales }) {
     </SectionCard>
   );
 }
+
+export default MisMaterialesTable;

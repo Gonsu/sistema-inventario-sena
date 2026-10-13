@@ -1,6 +1,9 @@
-import { Modal } from './Modal';
+// Importar la ventana emergente base
+import Modal from './Modal';
 
-export function ConfirmDialog({
+// Ventana para confirmar una acción importante (por ejemplo, aceptar una solicitud).
+// Muestra un mensaje y dos botones: Cancelar y Confirmar.
+function ConfirmDialog({
   abierto,
   titulo,
   mensaje,
@@ -15,6 +18,7 @@ export function ConfirmDialog({
       titulo={titulo}
       onCerrar={onCancelar}
       ancho="md"
+      // pie: botones de la parte de abajo de la ventana
       pie={
         <>
           <button className="btn-secondary" onClick={onCancelar} disabled={procesando}>
@@ -30,3 +34,5 @@ export function ConfirmDialog({
     </Modal>
   );
 }
+
+export default ConfirmDialog;

@@ -1,11 +1,19 @@
+// Importar constantes del sistema
 import { PRESUPUESTO_MAX_SOLICITUD } from '../../utils/constants';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
 import { formatCOP } from '../../utils/format';
 
-export function PresupuestoBar({ total }) {
+// Barra que muestra cuánto del presupuesto máximo ($3.000.000) se ha usado en la solicitud.
+// Se pone roja si el total se pasa del tope.
+function PresupuestoBar({ total }) {
+  // ¿Se pasó del tope? y porcentaje de la barra (máximo 100 %)
   const excedido = total > PRESUPUESTO_MAX_SOLICITUD;
   const porcentaje = Math.min(100, (total / PRESUPUESTO_MAX_SOLICITUD) * 100);
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <div className="rounded-input bg-white p-3">
+      {/* Texto: total usado / tope */}
       <div className="mb-1 flex flex-wrap justify-between gap-2 font-data text-sm">
         <span className="font-title font-semibold text-sena-header">
           Presupuesto de la solicitud
@@ -26,6 +34,7 @@ export function PresupuestoBar({ total }) {
           style={{ width: `${porcentaje}%` }}
         />
       </div>
+      {/* Aviso cuando se pasa del tope */}
       {excedido && (
         <p className="mt-1 font-data text-xs font-semibold text-red-600">
           Excedes el presupuesto máximo en {formatCOP(total - PRESUPUESTO_MAX_SOLICITUD)}.
@@ -34,3 +43,5 @@ export function PresupuestoBar({ total }) {
     </div>
   );
 }
+
+export default PresupuestoBar;

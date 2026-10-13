@@ -1,0 +1,22 @@
+/* Botones del sistema.
+   .btn es la base y las demás clases le agregan el color. */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-input px-4 py-2 font-title text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Botón verde principal (Guardar, Aceptar, Ingresar) */
+  .btn-primary {
+    @apply btn bg-sena-primary text-white hover:bg-sena-primary-hover;
+  }
+
+  /* Botón secundario (Cancelar, Volver) */
+  .btn-secondary {
+    @apply btn bg-sena-secondary text-white hover:bg-sena-secondary-hover;
+  }
+
+  /* Botón solo con borde, se rellena al pasar el mouse */
+  .btn-outline {
+    @apply btn border border-sena-primary text-sena-primary hover:bg-sena-primary hover:text-white;
+  }
+}

@@ -1,0 +1,21 @@
+/* Tablas de datos (solicitudes, materiales, historial, reportes). */
+@layer components {
+  .table-base {
+    @apply w-full border-collapse text-left font-data text-sm;
+  }
+
+  /* Encabezado verde oscuro que se queda fijo al hacer scroll */
+  .table-base thead th {
+    @apply sticky top-0 bg-sena-header px-3 py-2 font-title text-xs font-semibold uppercase tracking-wide text-white;
+  }
+
+  /* Celdas con línea divisoria abajo */
+  .table-base tbody td {
+    @apply border-b border-sena-card-border px-3 py-2 align-middle;
+  }
+
+  /* Resaltar la fila cuando el mouse pasa por encima */
+  .table-base tbody tr:hover {
+    @apply bg-white/60;
+  }
+}

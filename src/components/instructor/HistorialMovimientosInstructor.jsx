@@ -1,13 +1,24 @@
+// Importar herramientas básicas de React
 import { useMemo } from 'react';
-import { useCatalogo, useMovimientos } from '../../hooks/useInventarioData';
-import { formatFecha } from '../../utils/format';
-import { EmptyState } from '../ui/Primitives';
 
-/** Salidas (asignaciones aceptadas) y entradas (devoluciones) del instructor, en tiempo real. */
-export function HistorialMovimientosInstructor({ instructorId }) {
+// Importar los datos del inventario (se actualizan solos cuando cambian)
+import { useCatalogo, useMovimientos } from '../../hooks/useInventarioData';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { formatFecha } from '../../utils/format';
+
+// Importar componentes visuales reutilizables
+import EmptyState from '../ui/EmptyState';
+
+// Lista de movimientos del instructor:
+//  - Salidas: materiales que le entregaron (solicitudes aceptadas)
+//  - Entradas: materiales que devolvió a bodega
+function HistorialMovimientosInstructor({ instructorId }) {
+  // Datos del inventario
   const movimientos = useMovimientos();
   const { itemPorId, nombreUsuario } = useCatalogo();
 
+  // Solo los movimientos de este instructor, del más reciente al más antiguo
   const propios = useMemo(
     () =>
       movimientos
@@ -19,11 +30,13 @@ export function HistorialMovimientosInstructor({ instructorId }) {
     [movimientos, instructorId],
   );
 
+  // Si no hay movimientos, mostrar un mensaje
   if (propios.length === 0) return <EmptyState mensaje="Aún no hay movimientos registrados." />;
 
   return (
     <ul className="max-h-72 space-y-2 overflow-y-auto pr-1">
       {propios.map((m) => {
+        // Salida = material que recibió (rojo); Entrada = material que devolvió (verde)
         const salida = m.tipo === 'asignacion';
         return (
           <li
@@ -55,3 +68,5 @@ export function HistorialMovimientosInstructor({ instructorId }) {
     </ul>
   );
 }
+
+export default HistorialMovimientosInstructor;

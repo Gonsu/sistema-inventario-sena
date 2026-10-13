@@ -1,14 +1,22 @@
 // ============================================================
-// Selectores puros para la vista de Reportes. No escriben en
-// localStorage: reciben los datos sincronizados y los transforman.
+// Cálculos de la pantalla de Reportes.
+// Estas funciones NO guardan nada: reciben los datos y devuelven
+// las filas y totales que se muestran en las tablas y gráficas.
 // ============================================================
 
+// Importar la función que dice a qué coordinación pertenece un material
 import { coordinacionDeItem } from '../data/seed';
+
+// Importar el cálculo del color del semáforo
 import { nivelSemaforo } from '../utils/constants';
+
+// Importar la función de búsqueda
 import { coincide } from '../utils/format';
 
+// Milisegundos que tiene un día
 const DIA_MS = 24 * 60 * 60 * 1000;
 
+// Devuelve el tipo de contrato de un material (electronica, mobiliario o herramientas)
 function categoriaDe(item, contratoPorId) {
   return contratoPorId.get(item.contratoId)?.categoria;
 }
@@ -17,6 +25,7 @@ function categoriaDe(item, contratoPorId) {
 // Costos
 // ------------------------------------------------------------
 
+// Filas del reporte de costos, aplicando los filtros
 export function filasCostos(items, contratoPorId, f) {
   return items.flatMap((item) => {
     const categoria = categoriaDe(item, contratoPorId);
@@ -44,6 +53,7 @@ export function filasCostos(items, contratoPorId, f) {
 // Inversión mensual (solicitudes aceptadas por mes de aceptación)
 // ------------------------------------------------------------
 
+// Nombres cortos de los meses
 export const MESES = [
   'Ene',
   'Feb',
@@ -59,6 +69,7 @@ export const MESES = [
   'Dic',
 ];
 
+// Suma, mes a mes, el valor de las solicitudes aprobadas en el año, separado por contrato
 export function inversionMensual(solicitudes, itemPorId, contratoPorId, anio) {
   const meses = MESES.map((mes) => ({
     mes,
@@ -79,7 +90,7 @@ export function inversionMensual(solicitudes, itemPorId, contratoPorId, anio) {
   return meses;
 }
 
-/** Ejecutado en el año ÷ meses transcurridos × 12. */
+// Proyección del año: lo ejecutado ÷ meses transcurridos × 12
 export function proyeccionAnual(mensual, hoy) {
   const ejecutado = mensual.reduce(
     (acc, m) => acc + m.electronica + m.mobiliario + m.herramientas,
@@ -96,6 +107,7 @@ export function proyeccionAnual(mensual, hoy) {
 // Entregas (líneas de solicitudes aceptadas o pendientes)
 // ------------------------------------------------------------
 
+// Una fila por cada material de cada solicitud (aprobada = entregado, pendiente = pendiente)
 export function filasEntregas(solicitudes, itemPorId, contratoPorId) {
   return solicitudes
     .filter((s) => s.estado === 'aprobada' || s.estado === 'pendiente')
@@ -123,6 +135,7 @@ export function filasEntregas(solicitudes, itemPorId, contratoPorId) {
     .sort((a, b) => (b.fechaEntrega ?? '9').localeCompare(a.fechaEntrega ?? '9'));
 }
 
+// Aplica los filtros de contrato, coordinación y estado
 export function filtrarEntregas(filas, f) {
   return filas.filter(
     (r) =>
@@ -136,6 +149,8 @@ export function filtrarEntregas(filas, f) {
 // Trazabilidad (asignaciones activas)
 // ------------------------------------------------------------
 
+// Una fila por cada material que está en manos de un instructor,
+// con los días que lleva en uso y su color de semáforo
 export function filasTrazabilidad(asignaciones, itemPorId, usuarios, f, hoy = new Date()) {
   return asignaciones
     .filter((a) => a.fechaDevolucion === null)
@@ -165,6 +180,7 @@ export function filasTrazabilidad(asignaciones, itemPorId, usuarios, f, hoy = ne
     .sort((a, b) => b.diasEnUso - a.diasEnUso);
 }
 
+// Totales del inventario: unidades totales, en uso y disponibles
 export function resumenInventario(items) {
   return items.reduce(
     (acc, i) => ({
@@ -180,6 +196,7 @@ export function resumenInventario(items) {
 // Distribución por contrato (gráfica de torta)
 // ------------------------------------------------------------
 
+// Cuánto vale cada material de un contrato y qué porcentaje representa (para la torta)
 export function distribucionContrato(items, contratoId) {
   const propios = items.filter((i) => i.contratoId === contratoId);
   const total = propios.reduce((acc, i) => acc + i.valorUnitario * i.cantidadTotal, 0);

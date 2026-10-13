@@ -1,5 +1,6 @@
-/** Marca simplificada. Reemplazar por el logo oficial en src/assets si se dispone del archivo. */
-export function SenaLogo({ className = 'h-10 w-10' }) {
+// Logo del SENA dibujado en SVG (versión simplificada).
+// Si se consigue el logo oficial, se puede guardar en src/assets y reemplazar este dibujo.
+function SenaLogo({ className = 'h-10 w-10' }) {
   return (
     <svg viewBox="0 0 64 64" className={className} role="img" aria-label="SENA">
       <circle cx="32" cy="32" r="30" fill="#ffffff" />
@@ -16,3 +17,5 @@ export function SenaLogo({ className = 'h-10 w-10' }) {
     </svg>
   );
 }
+
+export default SenaLogo;

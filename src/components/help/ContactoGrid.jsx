@@ -1,6 +1,10 @@
+// Importar herramientas básicas de React
 import { useState } from 'react';
+
+// Importar íconos
 import { Mail, MessageCircle, Phone } from 'lucide-react';
 
+// Círculo verde que envuelve el ícono de cada tarjeta
 function IconoCirculo({ children }) {
   return (
     <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sena-primary text-white">
@@ -9,6 +13,7 @@ function IconoCirculo({ children }) {
   );
 }
 
+// Tarjeta de un medio de contacto (ícono, título y contenido)
 function TarjetaContacto({ icono, titulo, children }) {
   return (
     <div className="card flex flex-col items-center text-center">
@@ -19,13 +24,17 @@ function TarjetaContacto({ icono, titulo, children }) {
   );
 }
 
-export function ContactoGrid() {
+// Sección con los tres medios de contacto: teléfono, correo y chat
+function ContactoGrid() {
+  // Si el chat está iniciado (es una simulación)
   const [chatActivo, setChatActivo] = useState(false);
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <section>
       <h2 className="mb-4 text-xl">Contacto y Soporte</h2>
       <div className="grid gap-6 md:grid-cols-3">
+        {/* Teléfono */}
         <TarjetaContacto icono={<Phone className="h-6 w-6" aria-hidden />} titulo="Teléfono">
           <a
             href="tel:+5712345678"
@@ -36,6 +45,7 @@ export function ContactoGrid() {
           <p className="mt-1 font-data text-sm text-gray-600">Lunes a Viernes 8:00 AM - 6:00 PM</p>
         </TarjetaContacto>
 
+        {/* Correo electrónico */}
         <TarjetaContacto
           icono={<Mail className="h-6 w-6" aria-hidden />}
           titulo="Correo Electrónico"
@@ -49,6 +59,7 @@ export function ContactoGrid() {
           <p className="mt-1 font-data text-sm text-gray-600">Respuesta estimada: 24-48 horas</p>
         </TarjetaContacto>
 
+        {/* Chat en vivo */}
         <TarjetaContacto
           icono={<MessageCircle className="h-6 w-6" aria-hidden />}
           titulo="Chat en Vivo"
@@ -86,3 +97,5 @@ export function ContactoGrid() {
     </section>
   );
 }
+
+export default ContactoGrid;

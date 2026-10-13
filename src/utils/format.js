@@ -1,13 +1,20 @@
+// ============================================================
+// Funciones para mostrar datos (pesos, fechas, tamaños) y para buscar.
+// ============================================================
+
+// Formateador de pesos colombianos (sin decimales)
 const copFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
   maximumFractionDigits: 0,
 });
 
+// 1500000 → "$ 1.500.000"
 export function formatCOP(valor) {
   return copFormatter.format(valor);
 }
 
+// Fecha legible en español. conHora = false para mostrar solo el día
 export function formatFecha(iso, conHora = true) {
   const fecha = new Date(iso);
   if (Number.isNaN(fecha.getTime())) return '—';
@@ -19,17 +26,19 @@ export function formatFecha(iso, conHora = true) {
   });
 }
 
+// Tamaño de archivo legible: 2048 → "2.0 KB"
 export function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-/** Normaliza para búsquedas: minúsculas y sin tildes. */
+// Prepara un texto para buscar: minúsculas y sin tildes
 export function normalizar(texto) {
   return texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
+// ¿Alguno de los campos contiene el texto buscado? (si no se busca nada, siempre es sí)
 export function coincide(query, ...campos) {
   const q = normalizar(query.trim());
   if (!q) return true;

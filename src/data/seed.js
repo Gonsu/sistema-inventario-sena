@@ -1,6 +1,13 @@
+// ============================================================
+// Datos de prueba: contratos, materiales y usuarios con los que arranca
+// la aplicación la primera vez que se abre en un navegador.
+// ============================================================
+
+// Importar los presupuestos de cada contrato
 import { PRESUPUESTO_CONTRATOS } from '../utils/constants';
 
-// Los ítems de cada contrato suman exactamente PRESUPUESTO_CONTRATOS.
+// Contratos con sus materiales.
+// Los materiales de cada contrato suman exactamente su presupuesto.
 const CONTRATOS_SEED = [
   {
     categoria: 'electronica',
@@ -116,6 +123,7 @@ const CONTRATOS_SEED = [
   },
 ];
 
+// Arma la lista de contratos y materiales iniciales a partir de CONTRATOS_SEED
 export function construirInventarioInicial() {
   const ahora = new Date().toISOString();
   const fin = new Date(new Date().getFullYear(), 11, 31).toISOString();
@@ -154,7 +162,7 @@ export function construirInventarioInicial() {
   return { contratos, items };
 }
 
-/** Usuarios de demostración (las contraseñas se hashean al sembrar). */
+// Usuarios de prueba (las contraseñas se cifran al guardarlas)
 export const USUARIOS_SEED = [
   {
     id: 'user-instructor-1',
@@ -179,11 +187,12 @@ export const USUARIOS_SEED = [
   },
 ];
 
-/** Coordinación por código, para datos guardados antes de existir el campo. */
+// Coordinación de cada material según su código (para datos viejos que no tenían el campo)
 const COORDINACION_POR_CODIGO = Object.fromEntries(
   CONTRATOS_SEED.flatMap((c) => c.items.map((i) => [i.codigo, i.coordinacion])),
 );
 
+// Devuelve la coordinación de un material (si no la tiene, se busca por su código)
 export function coordinacionDeItem(item) {
   return item.coordinacion ?? COORDINACION_POR_CODIGO[item.codigo] ?? 'administracion';
 }

@@ -1,18 +1,18 @@
+// Importar herramientas básicas de React
 import { useEffect, useMemo, useRef, useState } from 'react';
+
+// Importar constantes del sistema
 import { POLLING_INTERVAL_MS } from '../utils/constants';
+
+// Importar las funciones para leer y guardar en localStorage
 import { parseJSON, readRaw, STORAGE_CHANGE_EVENT } from '../services/storage';
 
-/**
- * Suscribe un componente a una clave de localStorage.
- *
- * - Polling cada POLLING_INTERVAL_MS (2 s): garantiza la sincronización entre
- *   pestañas aunque el evento `storage` no se dispare (p. ej. iframes o
- *   navegadores que lo limitan).
- * - Evento `storage`: actualización inmediata cuando otra pestaña escribe.
- * - Evento propio STORAGE_CHANGE_EVENT: actualización inmediata en la misma pestaña.
- *
- * Solo re-renderiza cuando el string crudo cambia, así que el polling es barato.
- */
+// Hook que lee una clave del localStorage y la mantiene actualizada.
+// Se entera de los cambios de tres formas:
+//  - Revisando cada 2 segundos (funciona siempre, incluso entre pestañas)
+//  - Con el evento "storage": cuando otra pestaña guarda algo
+//  - Con nuestro evento propio: cuando esta misma pestaña guarda algo
+// Solo vuelve a dibujar el componente si el dato realmente cambió.
 export function useLocalStorageSync(key, fallback) {
   const [raw, setRaw] = useState(() => readRaw(key));
   const fallbackRef = useRef(fallback);

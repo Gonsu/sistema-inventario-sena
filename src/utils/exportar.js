@@ -1,6 +1,13 @@
-// Exportaciones a PDF (jsPDF) y Excel (SheetJS). Las librerías se cargan
-// bajo demanda para no inflar el bundle inicial.
+// ============================================================
+// Exportar a PDF (librería jsPDF) y a Excel (librería SheetJS).
+// Las librerías se descargan solo cuando el usuario exporta,
+// para que la aplicación cargue más rápido al principio.
+// ============================================================
+
+// Importar el formato de pesos y fechas
 import { formatCOP, formatFecha } from './format';
+
+// Importar los textos que se muestran para cada valor
 import {
   CONTRATO_LABEL,
   COORDINACION_LABEL,
@@ -8,8 +15,10 @@ import {
   TIPO_FORMACION_LABEL,
 } from './labels';
 
+// Color verde oscuro del SENA en formato RGB (para los encabezados de las tablas)
 const VERDE_OSCURO = [1, 64, 17];
 
+// Convierte los materiales de una solicitud en filas para la tabla
 function filasSolicitud(solicitud, itemPorId) {
   return solicitud.items.map((l) => {
     const item = itemPorId.get(l.itemId);
@@ -23,6 +32,7 @@ function filasSolicitud(solicitud, itemPorId) {
   });
 }
 
+// Descarga una solicitud en PDF con el formato oficial
 export async function exportarSolicitudPDF(solicitud, itemPorId) {
   const [{ jsPDF }, { autoTable }] = await Promise.all([
     import('jspdf'),
@@ -88,6 +98,7 @@ export async function exportarSolicitudPDF(solicitud, itemPorId) {
   doc.save(`${solicitud.numero}.pdf`);
 }
 
+// Descarga una solicitud en Excel
 export async function exportarSolicitudXLSX(solicitud, itemPorId) {
   const XLSX = await import('xlsx');
   const f = solicitud.formulario;
@@ -122,7 +133,7 @@ export async function exportarSolicitudXLSX(solicitud, itemPorId) {
   XLSX.writeFile(libro, `${solicitud.numero}.xlsx`);
 }
 
-/** Reporte multipágina: costos, entregas y trazabilidad (con los filtros activos). */
+// Descarga el PDF de la pantalla de Reportes: costos, entregas y trazabilidad (con los filtros aplicados)
 export async function exportarReportePDF(d) {
   const [{ jsPDF }, { autoTable }] = await Promise.all([
     import('jspdf'),

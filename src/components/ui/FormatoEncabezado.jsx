@@ -1,10 +1,15 @@
+// Importar el formato de fecha
 import { formatFecha } from '../../utils/format';
-import { SenaLogo } from './SenaLogo';
 
-/** Encabezado del formato oficial de solicitud, compartido por instructor y administración. */
-export function FormatoEncabezado({ numero, fecha }) {
+// Importar el logo
+import SenaLogo from './SenaLogo';
+
+// Encabezado del formato oficial de solicitud.
+// Lo usan tanto el instructor (al llenar la solicitud) como la administración (al revisarla).
+function FormatoEncabezado({ numero, fecha }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-input bg-sena-header px-4 py-3 text-white">
+      {/* Logo y nombre de la entidad */}
       <div className="flex items-center gap-3">
         <SenaLogo className="h-12 w-12" />
         <div>
@@ -16,6 +21,7 @@ export function FormatoEncabezado({ numero, fecha }) {
           </p>
         </div>
       </div>
+      {/* Fecha y número de la solicitud */}
       <div className="text-right font-data text-sm">
         <p>
           <span className="text-white/70">Fecha:</span> {formatFecha(fecha, false)}
@@ -28,3 +34,5 @@ export function FormatoEncabezado({ numero, fecha }) {
     </div>
   );
 }
+
+export default FormatoEncabezado;

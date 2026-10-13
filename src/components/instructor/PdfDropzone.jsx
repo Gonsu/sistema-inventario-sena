@@ -1,11 +1,24 @@
+// Importar herramientas básicas de React
 import { useRef, useState } from 'react';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
 import { formatBytes } from '../../utils/format';
+
+// Importar utilidades para manejar archivos e imágenes
 import { leerAdjunto, MAX_PDF_BYTES } from '../../utils/files';
 
-export function PdfDropzone({ archivo, onArchivo, onError }) {
+// Zona para adjuntar el formato en PDF: se puede arrastrar el archivo o hacer clic para buscarlo.
+// Recibe:
+//  - archivo: el PDF ya cargado (o null)
+//  - onArchivo: se llama con el archivo leído (o null al quitarlo)
+//  - onError: se llama con el mensaje de error (o null)
+function PdfDropzone({ archivo, onArchivo, onError }) {
+  // Referencia al <input type="file"> oculto, para abrirlo al hacer clic en la zona
   const inputRef = useRef(null);
+  // true mientras el usuario arrastra un archivo encima (para resaltar la zona)
   const [arrastrando, setArrastrando] = useState(false);
 
+  // Valida el archivo (que sea PDF y no pese demasiado) y lo lee
   const procesar = async (file) => {
     onError(null);
     if (!file) return;
@@ -19,6 +32,7 @@ export function PdfDropzone({ archivo, onArchivo, onError }) {
     }
   };
 
+  // Si ya hay un PDF cargado, mostrar su nombre y el botón "Quitar"
   if (archivo) {
     return (
       <div className="flex items-center justify-between gap-3 rounded-input border border-sena-primary bg-green-50 p-3">
@@ -64,12 +78,14 @@ export function PdfDropzone({ archivo, onArchivo, onError }) {
           : 'border-sena-card-border bg-white hover:border-sena-primary'
       }`}
     >
+      {/* Zona vacía: invita a arrastrar o seleccionar el PDF */}
       <p className="font-title text-sm font-semibold text-sena-header">
         Arrastra aquí el formato en PDF
       </p>
       <p className="font-data text-xs text-gray-500">
         o haz clic para seleccionarlo (obligatorio, máx. {formatBytes(MAX_PDF_BYTES)})
       </p>
+      {/* Selector de archivos oculto */}
       <input
         ref={inputRef}
         type="file"
@@ -80,3 +96,5 @@ export function PdfDropzone({ archivo, onArchivo, onError }) {
     </div>
   );
 }
+
+export default PdfDropzone;

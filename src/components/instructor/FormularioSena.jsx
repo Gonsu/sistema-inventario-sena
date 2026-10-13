@@ -1,10 +1,18 @@
+// Importar funciones de formato (pesos, fechas) y búsqueda
 import { formatCOP } from '../../utils/format';
-import { TIPO_FORMACION_LABEL } from '../../utils/labels';
-import { FormatoEncabezado } from '../ui/FormatoEncabezado';
-import { PdfDropzone } from './PdfDropzone';
 
-/** Fase 2: formato oficial SENA. */
-export function FormularioSena({
+// Importar los textos que se muestran para cada valor
+import { TIPO_FORMACION_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import FormatoEncabezado from '../ui/FormatoEncabezado';
+
+// Importar componentes de esta misma sección
+import PdfDropzone from './PdfDropzone';
+
+// Paso 2 de la solicitud: formato oficial SENA.
+// El instructor llena sus datos, revisa los materiales elegidos y adjunta el PDF firmado.
+function FormularioSena({
   numero,
   fecha,
   formulario,
@@ -15,12 +23,16 @@ export function FormularioSena({
   onPdf,
   onError,
 }) {
+  // Cambia un campo del formulario sin perder los demás
   const set = (campo, valor) => onFormulario({ ...formulario, [campo]: valor });
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <div className="space-y-4">
+      {/* Encabezado oficial del formato */}
       <FormatoEncabezado numero={numero} fecha={fecha} />
 
+      {/* Datos del instructor y de la formación */}
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="sol-nombre">
@@ -60,6 +72,7 @@ export function FormularioSena({
           />
         </div>
         <div className="sm:col-span-2">
+          {/* Botones para elegir el tipo de formación */}
           <span className="label">Tipo de formación</span>
           <div className="flex gap-2" role="radiogroup" aria-label="Tipo de formación">
             {Object.keys(TIPO_FORMACION_LABEL).map((t) => {
@@ -81,6 +94,7 @@ export function FormularioSena({
         </div>
       </div>
 
+      {/* Resumen de los materiales elegidos en el paso 1 */}
       <div className="overflow-auto rounded-input">
         <table className="table-base">
           <thead>
@@ -115,9 +129,12 @@ export function FormularioSena({
       </div>
 
       <div>
+        {/* Adjuntar el formato firmado (obligatorio) */}
         <span className="label">Formato firmado (PDF) *</span>
         <PdfDropzone archivo={pdf} onArchivo={onPdf} onError={onError} />
       </div>
     </div>
   );
 }
+
+export default FormularioSena;

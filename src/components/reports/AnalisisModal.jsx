@@ -1,4 +1,7 @@
+// Importar herramientas básicas de React
 import { useState } from 'react';
+
+// Importar los componentes de Recharts para dibujar gráficas
 import {
   Bar,
   BarChart,
@@ -12,20 +15,31 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { distribucionContrato } from '../../services/reportes';
-import { formatCOP } from '../../utils/format';
-import { CONTRATO_COLOR, CONTRATO_LABEL } from '../../utils/labels';
-import { Modal } from '../ui/Modal';
 
+// Importar los cálculos de los reportes
+import { distribucionContrato } from '../../services/reportes';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { formatCOP } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { CONTRATO_COLOR, CONTRATO_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import Modal from '../ui/Modal';
+
+// Constantes de las gráficas
 const SUPERFICIE = '#FFFFFF'; // fondo de la tarjeta de la gráfica
 const CATEGORIAS = ['electronica', 'mobiliario', 'herramientas'];
-/** Paleta categórica validada (orden fijo) para los ítems de un contrato. */
+// Colores de las porciones de la torta (siempre en el mismo orden)
 const COLORES_PORCION = ['#1F6FA8', '#39A900', '#C44E2F', '#A77BCA'];
 const MAX_PORCIONES = COLORES_PORCION.length;
 
+// Muestra un valor en millones, por ejemplo: $12,5 M
 const millones = (v) =>
   `$${(v / 1_000_000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} M`;
 
+// Cuadrito que aparece al pasar el mouse sobre una barra (valor por contrato y total del mes)
 function TooltipBarras({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const total = payload.reduce((acc, p) => acc + Number(p.value ?? 0), 0);
@@ -56,7 +70,7 @@ function TooltipBarras({ active, payload, label }) {
   );
 }
 
-/** Leyenda en orden fijo de la pila; Mobiliario muestra la misma trama que sus barras. */
+// Leyenda de colores de la gráfica de barras (Mobiliario lleva la misma trama que sus barras)
 function LeyendaContratos() {
   return (
     <ul className="flex flex-wrap justify-center gap-4 pt-2 font-data text-xs text-gray-700">
@@ -77,8 +91,12 @@ function LeyendaContratos() {
   );
 }
 
+// Gráfica de barras apiladas: cuánto se invirtió cada mes en cada contrato.
+// Tiene un botón para cambiar entre la gráfica y una tabla con los mismos datos.
 function InversionMensualChart({ datos, anio }) {
+  // true = mostrar la tabla en vez de la gráfica
   const [verTabla, setVerTabla] = useState(false);
+  // ¿No hay ninguna inversión en el año?
   const vacio = datos.every((m) => m.electronica + m.mobiliario + m.herramientas === 0);
 
   return (
@@ -99,6 +117,7 @@ function InversionMensualChart({ datos, anio }) {
         </button>
       </div>
 
+      {/* Tabla o gráfica, según lo que eligió el usuario */}
       {verTabla ? (
         <div className="max-h-72 overflow-auto">
           <table className="table-base">
@@ -199,12 +218,16 @@ function InversionMensualChart({ datos, anio }) {
   );
 }
 
+// Gráfica de torta: cómo se reparte el valor de un contrato entre sus materiales.
+// Arriba hay botones para elegir el contrato.
 function DistribucionContratoChart({ contratos, items }) {
+  // Contrato elegido y sus porciones
   const [categoria, setCategoria] = useState('electronica');
   const contrato = contratos.find((c) => c.categoria === categoria);
   const { porciones: todas, total } = distribucionContrato(items, contrato?.id);
 
-  // Más ítems que colores validados: los menores se agrupan en "Otros".
+  // Si hay más materiales que colores disponibles,
+  // los más pequeños se agrupan en una porción llamada "Otros".
   const ordenadas = [...todas].sort((a, b) => b.valor - a.valor);
   const porciones =
     ordenadas.length <= MAX_PORCIONES
@@ -244,6 +267,7 @@ function DistribucionContratoChart({ contratos, items }) {
         </div>
       </div>
 
+      {/* Gráfica a la izquierda y lista de porciones a la derecha */}
       <div className="grid items-center gap-4 md:grid-cols-2">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -326,7 +350,9 @@ function DistribucionContratoChart({ contratos, items }) {
   );
 }
 
-export default function AnalisisModal({ abierto, onCerrar, mensual, anio, contratos, items }) {
+// Ventana de "Ver Gráficas" de la pantalla de Reportes.
+// Muestra la inversión mensual y la distribución por contrato.
+function AnalisisModal({ abierto, onCerrar, mensual, anio, contratos, items }) {
   return (
     <Modal
       abierto={abierto}
@@ -346,3 +372,5 @@ export default function AnalisisModal({ abierto, onCerrar, mensual, anio, contra
     </Modal>
   );
 }
+
+export default AnalisisModal;

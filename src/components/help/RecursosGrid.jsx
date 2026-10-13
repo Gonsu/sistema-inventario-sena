@@ -1,6 +1,10 @@
+// Importar herramientas básicas de React
 import { useState } from 'react';
+
+// Importar íconos
 import { BookOpen, ChevronRight, HelpCircle, Library, PlayCircle } from 'lucide-react';
 
+// Lista de recursos. Si tiene "ancla", el botón lleva a esa sección de la página
 const RECURSOS = [
   {
     titulo: 'Manual de Usuario',
@@ -25,9 +29,12 @@ const RECURSOS = [
   },
 ];
 
-export function RecursosGrid() {
+// Sección de recursos adicionales (manuales, videos, etc.)
+function RecursosGrid() {
+  // Mensaje para los recursos que aún no están disponibles
   const [aviso, setAviso] = useState(null);
 
+  // Al hacer clic: bajar hasta la sección o avisar que estará disponible pronto
   const abrir = (r) => {
     if (r.ancla) {
       setAviso(null);
@@ -37,10 +44,12 @@ export function RecursosGrid() {
     }
   };
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <section>
       <h2 className="mb-4 text-xl">Recursos Adicionales</h2>
       <div className="grid gap-4 sm:grid-cols-2">
+        {/* Una tarjeta por cada recurso */}
         {RECURSOS.map((r) => (
           <button
             key={r.titulo}
@@ -64,6 +73,7 @@ export function RecursosGrid() {
           </button>
         ))}
       </div>
+      {/* Aviso de "próximamente" */}
       {aviso && (
         <p role="status" className="mt-3 font-data text-sm text-sena-header">
           {aviso}
@@ -72,3 +82,5 @@ export function RecursosGrid() {
     </section>
   );
 }
+
+export default RecursosGrid;

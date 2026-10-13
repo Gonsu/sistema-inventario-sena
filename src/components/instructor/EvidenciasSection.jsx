@@ -1,12 +1,27 @@
+// Importar herramientas básicas de React
 import { useMemo } from 'react';
-import { useCatalogo, useEvidencias } from '../../hooks/useInventarioData';
-import { formatFecha } from '../../utils/format';
-import { EVIDENCIA_TIPO_LABEL } from '../../utils/labels';
-import { Badge, EmptyState, SectionCard } from '../ui/Primitives';
 
-export function EvidenciasSection({ instructorId, onNueva }) {
+// Importar los datos del inventario (se actualizan solos cuando cambian)
+import { useCatalogo, useEvidencias } from '../../hooks/useInventarioData';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { formatFecha } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { EVIDENCIA_TIPO_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import Badge from '../ui/Badge';
+import EmptyState from '../ui/EmptyState';
+import SectionCard from '../ui/SectionCard';
+
+// Sección con las evidencias fotográficas que ha subido el instructor.
+// onNueva abre la ventana para cargar una nueva evidencia.
+function EvidenciasSection({ instructorId, onNueva }) {
+  // Datos del inventario
   const evidencias = useEvidencias();
   const { itemPorId } = useCatalogo();
+  // Solo las evidencias de este instructor, de la más reciente a la más antigua
   const propias = useMemo(
     () =>
       evidencias
@@ -15,6 +30,7 @@ export function EvidenciasSection({ instructorId, onNueva }) {
     [evidencias, instructorId],
   );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <SectionCard
       titulo="Evidencias"
@@ -28,6 +44,7 @@ export function EvidenciasSection({ instructorId, onNueva }) {
         <EmptyState mensaje="Aún no has cargado evidencias." />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Galería: una tarjeta por evidencia */}
           {propias.map((e) => (
             <article
               key={e.id}
@@ -53,3 +70,5 @@ export function EvidenciasSection({ instructorId, onNueva }) {
     </SectionCard>
   );
 }
+
+export default EvidenciasSection;

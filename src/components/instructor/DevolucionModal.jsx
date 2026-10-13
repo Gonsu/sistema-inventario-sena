@@ -1,13 +1,25 @@
+// Importar herramientas básicas de React
 import { useEffect, useState } from 'react';
-import { devolverMateriales } from '../../services/inventario';
-import { Modal } from '../ui/Modal';
-import { Alerta, CantidadBadge, EmptyState } from '../ui/Primitives';
 
-export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, onExito }) {
+// Importar las reglas de negocio del inventario
+import { devolverMateriales } from '../../services/inventario';
+
+// Importar componentes visuales reutilizables
+import Modal from '../ui/Modal';
+import Alerta from '../ui/Alerta';
+import CantidadBadge from '../ui/CantidadBadge';
+import EmptyState from '../ui/EmptyState';
+
+// Ventana para devolver materiales a bodega.
+// El instructor marca los materiales y escribe cuántas unidades devuelve.
+function DevolucionModal({ abierto, onCerrar, instructorId, materiales, onExito }) {
+  // Materiales seleccionados:
   // itemId -> cantidad a devolver (solo presentes los seleccionados)
   const [seleccion, setSeleccion] = useState({});
+  // Mensaje de error
   const [error, setError] = useState(null);
 
+  // Cada vez que se abre la ventana, empezar sin nada seleccionado
   useEffect(() => {
     if (abierto) {
       setSeleccion({});
@@ -15,6 +27,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
     }
   }, [abierto]);
 
+  // Mantener la selección al día:
   // Si otra pestaña cambió las asignaciones, recortar la selección a lo que aún se tiene.
   useEffect(() => {
     setSeleccion((prev) => {
@@ -27,6 +40,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
     });
   }, [materiales]);
 
+  // Marcar o desmarcar un material (al marcarlo se propone devolver todo)
   const toggle = (m) =>
     setSeleccion((prev) => {
       const next = { ...prev };
@@ -35,9 +49,11 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
       return next;
     });
 
+  // Lista de seleccionados y total de unidades a devolver
   const seleccionados = Object.entries(seleccion);
   const totalUnidades = seleccionados.reduce((acc, [, c]) => acc + c, 0);
 
+  // Registrar la devolución y cerrar la ventana
   const confirmar = () => {
     try {
       devolverMateriales(
@@ -46,6 +62,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
       );
       onExito(`Devolución registrada: ${totalUnidades} unidad(es).`);
       onCerrar();
+      // Si algo falla, mostrar el error
     } catch (e) {
       setError(e.message);
     }
@@ -56,6 +73,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
       abierto={abierto}
       titulo="Devolver Material"
       onCerrar={onCerrar}
+      // Botones de la parte de abajo
       pie={
         <>
           <button className="btn-secondary" onClick={onCerrar}>
@@ -74,6 +92,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
           <p className="font-data text-sm text-gray-600">
             Selecciona los materiales y la cantidad que entregas a bodega.
           </p>
+          {/* Tabla de materiales para seleccionar */}
           <table className="table-base">
             <thead>
               <tr>
@@ -85,6 +104,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
             </thead>
             <tbody>
               {materiales.map((m) => {
+                // ¿Este material está seleccionado?
                 const marcado = m.itemId in seleccion;
                 return (
                   <tr key={m.itemId}>
@@ -105,6 +125,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
                       <CantidadBadge valor={m.cantidad} />
                     </td>
                     <td>
+                      {/* La cantidad solo se puede escribir si el material está marcado */}
                       {marcado && (
                         <input
                           type="number"
@@ -113,6 +134,7 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
                           max={m.cantidad}
                           value={seleccion[m.itemId]}
                           onChange={(e) => {
+                            // La cantidad debe estar entre 1 y lo que tiene asignado
                             const v = Math.max(
                               1,
                               Math.min(m.cantidad, Math.floor(Number(e.target.value) || 1)),
@@ -130,9 +152,12 @@ export function DevolucionModal({ abierto, onCerrar, instructorId, materiales, o
               })}
             </tbody>
           </table>
+          {/* Mensaje de error */}
           {error && <Alerta>{error}</Alerta>}
         </div>
       )}
     </Modal>
   );
 }
+
+export default DevolucionModal;

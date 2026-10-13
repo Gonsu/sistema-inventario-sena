@@ -1,6 +1,10 @@
+// Importar herramientas básicas de React
 import { useState } from 'react';
+
+// Importar íconos
 import { ChevronDown } from 'lucide-react';
 
+// Preguntas que ven todos los usuarios
 const FAQ_COMUNES = [
   {
     pregunta: '¿Cómo solicito un nuevo material?',
@@ -19,6 +23,7 @@ const FAQ_COMUNES = [
   },
 ];
 
+// Preguntas extra que solo ve el personal administrativo
 const FAQ_ADMIN = [
   {
     pregunta: '¿Cómo acepto una solicitud de un instructor?',
@@ -32,10 +37,14 @@ const FAQ_ADMIN = [
   },
 ];
 
-export function FaqSection({ rol }) {
+// Lista de preguntas frecuentes tipo acordeón: al hacer clic en una pregunta se abre su respuesta
+function FaqSection({ rol }) {
+  // Elegir las preguntas según el rol
   const faqs = rol === 'administrativo' ? [...FAQ_COMUNES, ...FAQ_ADMIN] : FAQ_COMUNES;
+  // Posición de la pregunta abierta (empieza abierta la primera; null = ninguna)
   const [abierta, setAbierta] = useState(0);
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <section id="faq" className="card scroll-mt-24">
       <h2 className="mb-1 text-xl">Preguntas Frecuentes</h2>
@@ -43,7 +52,9 @@ export function FaqSection({ rol }) {
         Soporte técnico para las tareas más comunes.
       </p>
       <ul className="space-y-3">
+        {/* Crear un elemento por cada pregunta */}
         {faqs.map((faq, i) => {
+          // ¿Esta pregunta es la que está abierta?
           const expandida = abierta === i;
           const idPanel = `faq-panel-${i}`;
           return (
@@ -64,6 +75,7 @@ export function FaqSection({ rol }) {
                   aria-hidden
                 />
               </button>
+              {/* Respuesta (solo si la pregunta está abierta) */}
               {expandida && (
                 <p
                   id={idPanel}
@@ -79,3 +91,5 @@ export function FaqSection({ rol }) {
     </section>
   );
 }
+
+export default FaqSection;

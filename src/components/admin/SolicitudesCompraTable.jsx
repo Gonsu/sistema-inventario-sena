@@ -1,9 +1,21 @@
+// Importar herramientas básicas de React
 import { useMemo, useState } from 'react';
-import { descargarDataURL } from '../../utils/files';
-import { coincide, formatCOP, formatFecha } from '../../utils/format';
-import { ESTADO_SOLICITUD_LABEL } from '../../utils/labels';
-import { Badge, EmptyState, SearchInput } from '../ui/Primitives';
 
+// Importar utilidades para manejar archivos e imágenes
+import { descargarDataURL } from '../../utils/files';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { coincide, formatCOP, formatFecha } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { ESTADO_SOLICITUD_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import Badge from '../ui/Badge';
+import EmptyState from '../ui/EmptyState';
+import SearchInput from '../ui/SearchInput';
+
+// Color de la etiqueta según el estado de la solicitud
 const TONO_ESTADO = {
   pendiente: 'amarillo',
   aprobada: 'verde',
@@ -11,11 +23,14 @@ const TONO_ESTADO = {
   cancelada: 'gris',
 };
 
-/** Registro completo de solicitudes (todas las etapas) con acceso a los PDF enviados. */
-export function SolicitudesCompraTable({ solicitudes, onVer }) {
+// Registro de todas las solicitudes (en cualquier estado).
+// Permite buscarlas, filtrarlas por estado y descargar el PDF que envió el instructor.
+function SolicitudesCompraTable({ solicitudes, onVer }) {
+  // Filtros: texto del buscador y estado elegido
   const [busqueda, setBusqueda] = useState('');
   const [estado, setEstado] = useState('');
 
+  // Aplicar los filtros y ordenar de la más reciente a la más antigua
   const filtradas = useMemo(
     () =>
       solicitudes
@@ -34,8 +49,10 @@ export function SolicitudesCompraTable({ solicitudes, onVer }) {
     [solicitudes, estado, busqueda],
   );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <div className="space-y-3">
+      {/* Título, buscador y filtro por estado */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-lg">Solicitudes de Compra</h3>
         <div className="flex flex-wrap gap-2">
@@ -63,6 +80,7 @@ export function SolicitudesCompraTable({ solicitudes, onVer }) {
         <EmptyState mensaje="No hay solicitudes que coincidan." />
       ) : (
         <div className="max-h-96 overflow-auto rounded-input">
+          {/* Tabla de solicitudes */}
           <table className="table-base">
             <thead>
               <tr>
@@ -90,6 +108,7 @@ export function SolicitudesCompraTable({ solicitudes, onVer }) {
                   <td>
                     <button
                       className="font-data text-xs font-semibold text-sena-primary hover:underline"
+                      // Al hacer clic se descarga el PDF adjunto
                       onClick={() => descargarDataURL(s.formatoPdf.data, s.formatoPdf.nombre)}
                     >
                       📄 {s.formatoPdf.nombre}
@@ -109,3 +128,5 @@ export function SolicitudesCompraTable({ solicitudes, onVer }) {
     </div>
   );
 }
+
+export default SolicitudesCompraTable;

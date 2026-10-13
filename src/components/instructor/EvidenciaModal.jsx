@@ -1,11 +1,23 @@
+// Importar herramientas básicas de React
 import { useEffect, useState } from 'react';
-import { registrarEvidencia } from '../../services/inventario';
-import { EVIDENCIA_TIPO_LABEL } from '../../utils/labels';
-import { Modal } from '../ui/Modal';
-import { Alerta } from '../ui/Primitives';
-import { FotoEvidenciaPanel } from './FotoEvidenciaPanel';
 
-export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, onExito }) {
+// Importar las reglas de negocio del inventario
+import { registrarEvidencia } from '../../services/inventario';
+
+// Importar los textos que se muestran para cada valor
+import { EVIDENCIA_TIPO_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import Modal from '../ui/Modal';
+import Alerta from '../ui/Alerta';
+
+// Importar componentes de esta misma sección
+import FotoEvidenciaPanel from './FotoEvidenciaPanel';
+
+// Ventana para cargar una nueva evidencia fotográfica.
+// A la izquierda se sube o toma la foto; a la derecha se elige el material y se escribe una nota.
+function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, onExito }) {
+  // Estados del formulario
   const [foto, setFoto] = useState(null);
   const [nombreArchivo, setNombreArchivo] = useState('');
   const [itemId, setItemId] = useState('');
@@ -13,6 +25,7 @@ export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, on
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState(null);
 
+  // Cada vez que se abre la ventana, empezar con el formulario vacío
   useEffect(() => {
     if (abierto) {
       setFoto(null);
@@ -24,6 +37,7 @@ export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, on
     }
   }, [abierto]);
 
+  // Guardar la evidencia y cerrar la ventana
   const guardar = () => {
     try {
       registrarEvidencia({
@@ -36,6 +50,7 @@ export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, on
       });
       onExito('Evidencia guardada correctamente.');
       onCerrar();
+      // Si algo falla, mostrar el error
     } catch (e) {
       setError(e.message);
     }
@@ -47,6 +62,7 @@ export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, on
       titulo="Cargar Nueva Evidencia"
       onCerrar={onCerrar}
       ancho="xl"
+      // Botones de abajo: "Guardar" solo se activa si hay foto, material y nota
       pie={
         <>
           <button className="btn-secondary" onClick={onCerrar}>
@@ -63,6 +79,7 @@ export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, on
       }
     >
       <div className="grid gap-6 md:grid-cols-2">
+        {/* Columna izquierda: foto */}
         <FotoEvidenciaPanel
           foto={foto}
           onFoto={(data, nombre) => {
@@ -71,6 +88,7 @@ export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, on
           }}
         />
 
+        {/* Columna derecha: datos de la evidencia */}
         <div className="flex flex-col gap-3">
           <h3 className="text-base">Mensaje</h3>
           <div>
@@ -123,9 +141,12 @@ export function EvidenciaModal({ abierto, onCerrar, instructorId, materiales, on
 
             <p className="mt-1 text-right font-data text-xs text-gray-500">{mensaje.length}/1000</p>
           </div>
+          {/* Mensaje de error */}
           {error && <Alerta>{error}</Alerta>}
         </div>
       </div>
     </Modal>
   );
 }
+
+export default EvidenciaModal;
