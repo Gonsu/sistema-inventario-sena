@@ -1,14 +1,23 @@
 // ============================================================
-// Operaciones de dominio. Cada operación lee el estado MÁS RECIENTE de
-// localStorage (no el estado de React) antes de escribir, para no pisar
-// cambios hechos desde otra pestaña entre dos ciclos de polling.
+// Reglas de negocio del inventario: solicitudes, aprobaciones,
+// devoluciones, evidencias y edición de contratos.
+//
+// Cada función lee los datos MÁS RECIENTES del localStorage (no los de
+// React) antes de guardar, para no borrar cambios hechos en otra pestaña.
+// Si algo no es válido, la función lanza un Error con un mensaje para el usuario.
 // ============================================================
 
+// Importar constantes del sistema
 import { PRESUPUESTO_MAX_SOLICITUD, STORAGE_KEYS } from '../utils/constants';
+
+// Importar el formato de pesos y el generador de identificadores
 import { formatCOP } from '../utils/format';
 import { generarId } from '../utils/id';
+
+// Importar las funciones para leer y guardar en localStorage
 import { readJSON, writeMany } from './storage';
 
+// Atajos para leer cada lista guardada en el navegador
 const leer = {
   contratos: () => readJSON(STORAGE_KEYS.contratos, []),
   items: () => readJSON(STORAGE_KEYS.items, []),
@@ -18,15 +27,19 @@ const leer = {
   evidencias: () => readJSON(STORAGE_KEYS.evidencias, []),
 };
 
+// Crea un registro para el historial con id y fecha automáticos
 function nuevoMovimiento(datos) {
   return { id: generarId(), fecha: new Date().toISOString(), ...datos };
 }
 
+// Calcula el estado de un material: si quedan unidades está "disponible", si no "en uso".
+// Los estados de mantenimiento y dado de baja no se cambian.
 function estadoSegunDisponibilidad(item) {
   if (item.estado === 'mantenimiento' || item.estado === 'dado_de_baja') return item.estado;
   return item.cantidadDisponible > 0 ? 'disponible' : 'en_uso';
 }
 
+// Suma cantidad × valor unitario de cada línea
 export function calcularTotal(lineas) {
   return lineas.reduce((acc, l) => acc + l.cantidad * l.valorUnitario, 0);
 }
@@ -35,7 +48,9 @@ export function calcularTotal(lineas) {
 // Solicitudes
 // ------------------------------------------------------------
 
+// Crea una solicitud de materiales del instructor (queda "pendiente" de aprobación)
 export function crearSolicitud(input) {
+  // 1. Validar el formulario, el PDF y que haya materiales
   const { formulario, formatoPdf } = input;
   if (!formulario.nombre.trim() || !formulario.apellido.trim() || !formulario.programa.trim()) {
     throw new Error('Completa nombre, apellido y programa de formación.');
@@ -45,6 +60,7 @@ export function crearSolicitud(input) {
   }
   if (input.lineas.length === 0) throw new Error('Selecciona al menos un material.');
 
+  // 2. Revisar cada material: que exista y que haya unidades suficientes
   const items = leer.items();
   const lineas = input.lineas.map(({ itemId, cantidad }) => {
     const item = items.find((i) => i.id === itemId);
@@ -60,6 +76,7 @@ export function crearSolicitud(input) {
     return { itemId, cantidad, valorUnitario: item.valorUnitario };
   });
 
+  // 3. Revisar que no se pase del tope de $3.000.000
   const valorTotal = calcularTotal(lineas);
   if (valorTotal > PRESUPUESTO_MAX_SOLICITUD) {
     throw new Error(
@@ -67,6 +84,7 @@ export function crearSolicitud(input) {
     );
   }
 
+  // 4. Armar la solicitud
   const ahora = Date.now();
   const solicitud = {
     id: generarId(),
@@ -87,6 +105,7 @@ export function crearSolicitud(input) {
     resueltaPor: null,
   };
 
+  // 5. Registrar el movimiento en el historial
   const movimiento = nuevoMovimiento({
     tipo: 'solicitud_creada',
     usuarioId: input.instructorId,
@@ -96,6 +115,7 @@ export function crearSolicitud(input) {
     observacion: `Solicitud ${solicitud.numero} por ${formatCOP(valorTotal)}`,
   });
 
+  // 6. Guardar todo junto
   writeMany([
     [STORAGE_KEYS.solicitudes, [...leer.solicitudes(), solicitud]],
     [STORAGE_KEYS.movimientos, [...leer.movimientos(), movimiento]],
@@ -103,11 +123,11 @@ export function crearSolicitud(input) {
   return solicitud;
 }
 
-/**
- * Acepta una solicitud pendiente: descuenta inventario, crea las asignaciones
- * del instructor, registra la salida en el historial y la saca de la cola.
- */
+// Acepta una solicitud pendiente (la usa el administrativo):
+// descuenta el inventario, le asigna los materiales al instructor
+// y registra la salida en el historial.
 export function aceptarSolicitud(solicitudId, adminId) {
+  // Buscar la solicitud y verificar que siga pendiente
   const solicitudes = leer.solicitudes();
   const solicitud = solicitudes.find((s) => s.id === solicitudId);
   if (!solicitud) throw new Error('La solicitud ya no existe.');
@@ -116,7 +136,7 @@ export function aceptarSolicitud(solicitudId, adminId) {
   const items = leer.items();
   const ahora = new Date().toISOString();
 
-  // Validar existencias antes de modificar nada.
+  // Validar que haya unidades suficientes ANTES de cambiar cualquier cosa
   for (const linea of solicitud.items) {
     const item = items.find((i) => i.id === linea.itemId);
     if (!item) throw new Error('Uno de los materiales solicitados ya no existe.');
@@ -127,6 +147,7 @@ export function aceptarSolicitud(solicitudId, adminId) {
     }
   }
 
+  // Descontar del inventario las cantidades entregadas
   const itemsActualizados = items.map((item) => {
     const linea = solicitud.items.find((l) => l.itemId === item.id);
     if (!linea) return item;
@@ -138,6 +159,7 @@ export function aceptarSolicitud(solicitudId, adminId) {
     return { ...actualizado, estado: estadoSegunDisponibilidad(actualizado) };
   });
 
+  // Crear las asignaciones: desde ahora el instructor tiene estos materiales
   const nuevasAsignaciones = solicitud.items.map((linea) => ({
     id: generarId(),
     itemId: linea.itemId,
@@ -149,6 +171,7 @@ export function aceptarSolicitud(solicitudId, adminId) {
     fechaDevolucion: null,
   }));
 
+  // Registrar la salida en el historial
   const movimiento = nuevoMovimiento({
     tipo: 'asignacion',
     usuarioId: adminId,
@@ -161,6 +184,7 @@ export function aceptarSolicitud(solicitudId, adminId) {
     observacion: `Solicitud ${solicitud.numero} aceptada`,
   });
 
+  // Guardar todo junto y marcar la solicitud como aprobada
   writeMany([
     [STORAGE_KEYS.items, itemsActualizados],
     [STORAGE_KEYS.asignaciones, [...leer.asignaciones(), ...nuevasAsignaciones]],
@@ -185,16 +209,20 @@ export function aceptarSolicitud(solicitudId, adminId) {
 // Devoluciones
 // ------------------------------------------------------------
 
+// Registra la devolución de materiales a bodega por parte de un instructor
 export function devolverMateriales(instructorId, lineas) {
   const lineasValidas = lineas.filter((l) => l.cantidad > 0);
   if (lineasValidas.length === 0) throw new Error('Selecciona al menos un material para devolver.');
 
+  // Copias de los datos que se van a modificar
   const ahora = new Date().toISOString();
   let asignaciones = leer.asignaciones();
   const nuevas = [];
   let items = leer.items();
 
+  // Procesar cada material devuelto
   for (const { itemId, cantidad } of lineasValidas) {
+    // Asignaciones que el instructor aún tiene de este material (de la más antigua a la más reciente)
     const activas = asignaciones
       .filter(
         (a) => a.instructorId === instructorId && a.itemId === itemId && a.fechaDevolucion === null,
@@ -208,7 +236,8 @@ export function devolverMateriales(instructorId, lineas) {
       );
     }
 
-    // Consumir asignaciones en orden FIFO; las parciales se dividen para conservar la trazabilidad.
+    // Cerrar asignaciones empezando por la más antigua (primero en entrar, primero en salir).
+    // Si se devuelve solo una parte, la asignación se divide en dos para no perder el rastro.
     let pendiente = cantidad;
     for (const a of activas) {
       if (pendiente === 0) break;
@@ -231,6 +260,7 @@ export function devolverMateriales(instructorId, lineas) {
       }
     }
 
+    // Devolver las unidades al inventario
     items = items.map((i) => {
       if (i.id !== itemId) return i;
       const actualizado = {
@@ -242,6 +272,7 @@ export function devolverMateriales(instructorId, lineas) {
     });
   }
 
+  // Registrar la entrada en el historial
   const movimiento = nuevoMovimiento({
     tipo: 'devolucion',
     usuarioId: instructorId,
@@ -250,6 +281,7 @@ export function devolverMateriales(instructorId, lineas) {
     observacion: 'Devolución de materiales a bodega',
   });
 
+  // Guardar todo junto
   writeMany([
     [STORAGE_KEYS.asignaciones, [...asignaciones, ...nuevas]],
     [STORAGE_KEYS.items, items],
@@ -261,11 +293,14 @@ export function devolverMateriales(instructorId, lineas) {
 // Evidencias
 // ------------------------------------------------------------
 
+// Guarda una evidencia fotográfica de un material
 export function registrarEvidencia(input) {
+  // Validar los datos
   if (!input.itemId) throw new Error('Selecciona el material al que corresponde la evidencia.');
   if (!input.archivo) throw new Error('Adjunta o toma una foto como evidencia.');
   if (!input.descripcion.trim()) throw new Error('Escribe un mensaje describiendo la evidencia.');
 
+  // Armar la evidencia
   const evidencia = {
     id: generarId(),
     itemId: input.itemId,
@@ -284,6 +319,7 @@ export function registrarEvidencia(input) {
     itemId: input.itemId,
     observacion: `Evidencia de tipo "${input.tipo}"`,
   });
+  // Guardar la evidencia y el movimiento
   writeMany([
     [STORAGE_KEYS.evidencias, [...leer.evidencias(), evidencia]],
     [STORAGE_KEYS.movimientos, [...leer.movimientos(), movimiento]],
@@ -295,8 +331,10 @@ export function registrarEvidencia(input) {
 // Configuración de contratos
 // ------------------------------------------------------------
 
-/** Devuelve la lista de cambios registrados (vacía si no hubo cambios). */
+// Guarda los cambios de un contrato y de sus materiales.
+// Devuelve la lista de cambios registrados (vacía si no hubo cambios).
 export function actualizarContrato(contratoId, datos, ediciones, usuarioId) {
+  // Buscar el contrato y validar los datos obligatorios
   const contratos = leer.contratos();
   const contrato = contratos.find((c) => c.id === contratoId);
   if (!contrato) throw new Error('El contrato ya no existe.');
@@ -305,12 +343,14 @@ export function actualizarContrato(contratoId, datos, ediciones, usuarioId) {
   }
 
   const ahora = new Date().toISOString();
+  // Lista de cambios en texto, para mostrar en el historial (ej: "Proveedor: A → B")
   const cambios = [];
   const registrar = (prefijo, campo, antes, despues) => {
     if (antes !== despues) cambios.push(`${prefijo}${campo}: ${antes} → ${despues}`);
   };
 
   const items = leer.items();
+  // Aplicar los cambios a cada material del contrato (validando cada dato)
   const itemsActualizados = items.map((item) => {
     const ed = ediciones.find((e) => e.id === item.id);
     if (!ed || item.contratoId !== contratoId) return item;
@@ -345,15 +385,18 @@ export function actualizarContrato(contratoId, datos, ediciones, usuarioId) {
     return { ...actualizado, estado: estadoSegunDisponibilidad(actualizado) };
   });
 
+  // Recalcular el presupuesto del contrato
   const presupuesto = itemsActualizados
     .filter((i) => i.contratoId === contratoId)
     .reduce((acc, i) => acc + i.valorUnitario * i.cantidadTotal, 0);
 
+  // Comparar los datos generales del contrato
   registrar('', 'N° contrato', contrato.numeroContrato, datos.numeroContrato.trim());
   registrar('', 'Proveedor', contrato.proveedor, datos.proveedor.trim());
   registrar('', 'Fecha fin', contrato.fechaFin.slice(0, 10), datos.fechaFin);
   registrar('', 'Presupuesto', formatCOP(contrato.presupuesto), formatCOP(presupuesto));
 
+  // Si no cambió nada, no se guarda nada
   if (cambios.length === 0) return cambios;
 
   const contratoActualizado = {
@@ -368,6 +411,7 @@ export function actualizarContrato(contratoId, datos, ediciones, usuarioId) {
     actualizadoEn: ahora,
   };
 
+  // Registrar los cambios en el historial
   const movimiento = nuevoMovimiento({
     tipo: 'contrato_actualizado',
     usuarioId,
@@ -376,6 +420,7 @@ export function actualizarContrato(contratoId, datos, ediciones, usuarioId) {
     observacion: `Contrato ${contrato.nombre} actualizado`,
   });
 
+  // Guardar todo junto
   writeMany([
     [STORAGE_KEYS.items, itemsActualizados],
     [STORAGE_KEYS.contratos, contratos.map((c) => (c.id === contratoId ? contratoActualizado : c))],

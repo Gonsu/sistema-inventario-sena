@@ -1,7 +1,13 @@
-/** Tamaño máximo del PDF adjunto (localStorage suele limitar a ~5 MB en total). */
+// ============================================================
+// Utilidades para manejar archivos: leer PDF, comprimir fotos y descargar.
+// ============================================================
+
+// Tamaño máximo del PDF adjunto (el localStorage solo guarda unos 5 MB en total)
 export const MAX_PDF_BYTES = 1.5 * 1024 * 1024;
+// Tamaño máximo de una imagen antes de comprimirla
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
+// Lee un archivo y lo convierte en texto (data URL) para poder guardarlo en localStorage
 export function leerComoDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -11,6 +17,7 @@ export function leerComoDataURL(file) {
   });
 }
 
+// Lee un archivo y devuelve sus datos: nombre, tipo, tamaño y contenido
 export async function leerAdjunto(file) {
   return {
     nombre: file.name,
@@ -20,6 +27,7 @@ export async function leerAdjunto(file) {
   };
 }
 
+// Carga una imagen en memoria para poder dibujarla
 function cargarImagen(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -29,7 +37,7 @@ function cargarImagen(src) {
   });
 }
 
-/** Dibuja una fuente (imagen o video) en un canvas redimensionado y devuelve JPEG. */
+// Dibuja una imagen o un fotograma de la cámara más pequeño y lo devuelve como JPEG
 export function canvasAJpeg(source, anchoOriginal, altoOriginal, maxLado = 1024, calidad = 0.75) {
   const escala = Math.min(1, maxLado / Math.max(anchoOriginal, altoOriginal));
   const canvas = document.createElement('canvas');
@@ -41,12 +49,13 @@ export function canvasAJpeg(source, anchoOriginal, altoOriginal, maxLado = 1024,
   return canvas.toDataURL('image/jpeg', calidad);
 }
 
-/** Comprime una imagen subida para que quepa holgadamente en localStorage. */
+// Comprime una imagen subida para que ocupe poco espacio en localStorage
 export async function comprimirImagen(file) {
   const img = await cargarImagen(await leerComoDataURL(file));
   return canvasAJpeg(img, img.naturalWidth, img.naturalHeight);
 }
 
+// Descarga un archivo guardado (crea un enlace invisible y le hace clic)
 export function descargarDataURL(data, nombre) {
   const a = document.createElement('a');
   a.href = data;

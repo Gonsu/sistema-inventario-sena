@@ -1,6 +1,12 @@
+// Importar constantes del sistema
 import { SEMAFORO_UMBRALES } from '../../utils/constants';
-import { EmptyState, MetricCard, SectionCard } from '../ui/Primitives';
 
+// Importar componentes visuales reutilizables
+import EmptyState from '../ui/EmptyState';
+import MetricCard from '../ui/MetricCard';
+import SectionCard from '../ui/SectionCard';
+
+// Color y texto de cada nivel del semáforo de "Días en Uso"
 const SEMAFORO = {
   verde: {
     color: 'bg-semaforo-verde',
@@ -16,7 +22,10 @@ const SEMAFORO = {
   },
 };
 
-export function TrazabilidadReporte({ filtros, onFiltros, filas, resumen }) {
+// Reporte de trazabilidad: dónde está cada material, quién lo tiene
+// y cuántos días lleva en uso (con semáforo verde, amarillo o rojo).
+function TrazabilidadReporte({ filtros, onFiltros, filas, resumen }) {
+  // Crea una cajita de búsqueda para poner debajo del título de una columna
   const campo = (k, placeholder) => (
     <input
       type="search"
@@ -28,6 +37,7 @@ export function TrazabilidadReporte({ filtros, onFiltros, filas, resumen }) {
     />
   );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <SectionCard
       titulo="Trazabilidad de Material"
@@ -45,6 +55,7 @@ export function TrazabilidadReporte({ filtros, onFiltros, filas, resumen }) {
         </ul>
       }
     >
+      {/* Tabla con filtros en el encabezado de cada columna */}
       <div className="max-h-96 overflow-auto rounded-input">
         <table className="table-base">
           <thead>
@@ -105,6 +116,7 @@ export function TrazabilidadReporte({ filtros, onFiltros, filas, resumen }) {
         </table>
       </div>
 
+      {/* Tarjetas de resumen del inventario */}
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <MetricCard etiqueta="Total Materiales" valor={resumen.totalMateriales} />
         <MetricCard etiqueta="En Uso" valor={resumen.enUso} />
@@ -113,3 +125,5 @@ export function TrazabilidadReporte({ filtros, onFiltros, filas, resumen }) {
     </SectionCard>
   );
 }
+
+export default TrazabilidadReporte;

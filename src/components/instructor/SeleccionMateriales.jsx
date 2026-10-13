@@ -1,24 +1,35 @@
+// Importar herramientas básicas de React
 import { useMemo, useState } from 'react';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
 import { coincide, formatCOP } from '../../utils/format';
-import { Badge, SearchInput } from '../ui/Primitives';
 
-// itemId -> cantidad
+// Importar componentes visuales reutilizables
+import Badge from '../ui/Badge';
+import SearchInput from '../ui/SearchInput';
 
-/** Fase 1: tabla con los ítems de los tres contratos. */
-export function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) {
+// Paso 1 de la solicitud: tabla con los materiales de los tres contratos.
+// Recibe:
+//  - seleccion: objeto { idDelMaterial: cantidad } con lo que se ha elegido
+//  - onCambiar: se llama con la nueva selección cada vez que cambia
+function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) {
+  // Filtros: texto del buscador y contrato elegido
   const [busqueda, setBusqueda] = useState('');
   const [contratoFiltro, setContratoFiltro] = useState('');
+  // Índice para mostrar el nombre del contrato de cada material
   const nombreContrato = useMemo(
     () => new Map(contratos.map((c) => [c.id, c.nombre])),
     [contratos],
   );
 
+  // Materiales que cumplen los filtros
   const visibles = items.filter(
     (i) =>
       (!contratoFiltro || i.contratoId === contratoFiltro) &&
       coincide(busqueda, i.nombre, i.codigo),
   );
 
+  // Marcar o desmarcar un material (al marcarlo empieza con 1 unidad)
   const toggle = (item) => {
     const next = { ...seleccion };
     if (item.id in next) delete next[item.id];
@@ -26,8 +37,10 @@ export function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) 
     onCambiar(next);
   };
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <div className="space-y-3">
+      {/* Buscador y filtro por contrato */}
       <div className="flex flex-wrap gap-2">
         <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar material" />
         <select
@@ -44,6 +57,7 @@ export function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) 
           ))}
         </select>
       </div>
+      {/* Tabla de materiales disponibles */}
       <div className="max-h-[45vh] overflow-auto rounded-input">
         <table className="table-base">
           <thead>
@@ -58,6 +72,7 @@ export function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) 
           </thead>
           <tbody>
             {visibles.map((item) => {
+              // ¿Está seleccionado? ¿Se acabó en bodega?
               const marcado = item.id in seleccion;
               const agotado = item.cantidadDisponible === 0;
               return (
@@ -84,6 +99,7 @@ export function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) 
                     {agotado ? <Badge tono="rojo">Agotado</Badge> : item.cantidadDisponible}
                   </td>
                   <td>
+                    {/* La cantidad solo se puede escribir si el material está marcado */}
                     {marcado && (
                       <input
                         type="number"
@@ -92,6 +108,7 @@ export function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) 
                         max={item.cantidadDisponible}
                         value={seleccion[item.id]}
                         onChange={(e) => {
+                          // La cantidad debe estar entre 1 y lo que hay disponible
                           const v = Math.max(
                             1,
                             Math.min(
@@ -114,3 +131,5 @@ export function SeleccionMateriales({ items, contratos, seleccion, onCambiar }) 
     </div>
   );
 }
+
+export default SeleccionMateriales;

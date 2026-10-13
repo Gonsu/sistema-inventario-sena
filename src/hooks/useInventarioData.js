@@ -1,9 +1,22 @@
+// Importar herramientas básicas de React
 import { useMemo } from 'react';
+
+// Importar constantes del sistema
 import { STORAGE_KEYS } from '../utils/constants';
+
+// Importar el hook que lee y escucha el localStorage
 import { useLocalStorageSync } from './useLocalStorageSync';
 
+// ============================================================
+// Hooks para leer los datos del inventario.
+// Cada uno lee una lista del localStorage y la mantiene actualizada:
+// si otra pestaña cambia algo, el componente se vuelve a dibujar solo.
+// ============================================================
+
+// Valor por defecto cuando una lista no existe
 const VACIO = [];
 
+// Un hook por cada lista guardada
 export const useContratos = () => useLocalStorageSync(STORAGE_KEYS.contratos, VACIO);
 export const useItems = () => useLocalStorageSync(STORAGE_KEYS.items, VACIO);
 export const useAsignaciones = () => useLocalStorageSync(STORAGE_KEYS.asignaciones, VACIO);
@@ -12,7 +25,7 @@ export const useSolicitudes = () => useLocalStorageSync(STORAGE_KEYS.solicitudes
 export const useEvidencias = () => useLocalStorageSync(STORAGE_KEYS.evidencias, VACIO);
 export const useUsuarios = () => useLocalStorageSync(STORAGE_KEYS.users, VACIO);
 
-/** Índices por id para búsquedas O(1) en tablas. */
+// Catálogo con índices para encontrar rápido un material o contrato por su id
 export function useCatalogo() {
   const items = useItems();
   const contratos = useContratos();
@@ -29,7 +42,7 @@ export function useCatalogo() {
   );
 }
 
-/** "materialesAsignados": asignaciones activas del instructor agrupadas por ítem. */
+// Materiales que tiene un instructor en este momento, sumando las cantidades por material
 export function useMaterialesAsignados(instructorId) {
   const asignaciones = useAsignaciones();
   const { itemPorId } = useCatalogo();

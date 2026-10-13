@@ -1,0 +1,6 @@
+/* Tarjeta blanca con borde y sombra que envuelve cada sección de los paneles. */
+@layer components {
+  .card {
+    @apply rounded-card border border-sena-card-border bg-sena-card p-5 shadow-card;
+  }
+}

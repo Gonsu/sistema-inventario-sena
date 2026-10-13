@@ -1,16 +1,28 @@
+// Importar herramientas básicas de React
 import { useEffect, useState } from 'react';
-import { actualizarContrato } from '../../services/inventario';
-import { formatCOP } from '../../utils/format';
-import { Modal } from '../ui/Modal';
-import { Alerta } from '../ui/Primitives';
 
-export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExito }) {
+// Importar las reglas de negocio del inventario
+import { actualizarContrato } from '../../services/inventario';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { formatCOP } from '../../utils/format';
+
+// Importar componentes visuales reutilizables
+import Modal from '../ui/Modal';
+import Alerta from '../ui/Alerta';
+
+// Ventana para editar un contrato: número, proveedor, fecha de fin
+// y los materiales que tiene (nombre, ubicación, valor y cantidad).
+// Cada cambio queda registrado en el historial.
+function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExito }) {
+  // Estados del formulario
   const [numeroContrato, setNumeroContrato] = useState('');
   const [proveedor, setProveedor] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [ediciones, setEdiciones] = useState([]);
   const [error, setError] = useState(null);
 
+  // Cargar los datos del contrato cuando se abre la ventana.
   // Tomar una copia al abrir: el polling no debe sobrescribir lo que el administrador está editando.
   useEffect(() => {
     if (!contrato) return;
@@ -31,11 +43,14 @@ export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExit
     setError(null);
   }, [contrato?.id]);
 
+  // Cambia un dato de un material de la tabla
   const actualizar = (id, cambio) =>
     setEdiciones((prev) => prev.map((e) => (e.id === id ? { ...e, ...cambio } : e)));
 
+  // Presupuesto recalculado con los valores editados
   const presupuesto = ediciones.reduce((acc, e) => acc + e.valorUnitario * e.cantidadTotal, 0);
 
+  // Guardar los cambios y avisar cuántos se registraron
   const guardar = () => {
     if (!contrato) return;
     try {
@@ -51,11 +66,13 @@ export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExit
           : 'No hubo cambios que guardar.',
       );
       onCerrar();
+      // Si algún dato no es válido, mostrar el error
     } catch (e) {
       setError(e.message);
     }
   };
 
+  // Convierte lo escrito en un número entero que no sea negativo
   const numero = (v) => Math.max(0, Math.floor(Number(v) || 0));
 
   return (
@@ -76,6 +93,7 @@ export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExit
       }
     >
       <div className="space-y-4">
+        {/* Datos generales del contrato */}
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
             <label className="label" htmlFor="ct-numero">
@@ -113,6 +131,7 @@ export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExit
           </div>
         </div>
 
+        {/* Tabla editable de materiales */}
         <div className="overflow-auto rounded-input">
           <table className="table-base">
             <thead>
@@ -128,6 +147,7 @@ export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExit
             </thead>
             <tbody>
               {ediciones.map((e) => {
+                // "En uso" = unidades que tienen los instructores; la cantidad total no puede ser menor
                 const original = items.find((i) => i.id === e.id);
                 const enUso = original ? original.cantidadTotal - original.cantidadDisponible : 0;
                 return (
@@ -189,6 +209,7 @@ export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExit
           </table>
         </div>
 
+        {/* Comparación del presupuesto actual con el recalculado */}
         <div className="flex flex-wrap items-center justify-end gap-4 rounded-input bg-white p-3 font-data">
           <span className="text-sm text-gray-600">
             Presupuesto actual: {formatCOP(contrato?.presupuesto ?? 0)}
@@ -197,8 +218,11 @@ export function ContratoEditModal({ contrato, items, usuarioId, onCerrar, onExit
             Recalculado: {formatCOP(presupuesto)}
           </span>
         </div>
+        {/* Mensaje de error */}
         {error && <Alerta>{error}</Alerta>}
       </div>
     </Modal>
   );
 }
+
+export default ContratoEditModal;

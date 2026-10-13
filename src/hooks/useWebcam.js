@@ -1,6 +1,10 @@
+// Importar herramientas básicas de React
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+// Importar utilidades para manejar archivos e imágenes
 import { canvasAJpeg } from '../utils/files';
 
+// Traduce los errores de la cámara a un mensaje entendible
 function mensajeError(err) {
   if (err instanceof DOMException) {
     if (err.name === 'NotAllowedError')
@@ -11,13 +15,15 @@ function mensajeError(err) {
   return 'No fue posible acceder a la cámara.';
 }
 
-/** Controla la webcam con getUserMedia y captura fotogramas mediante canvas. */
+// Hook para usar la cámara web: encenderla, apagarla y tomar fotos
 export function useWebcam() {
+  // videoRef: el <video> donde se ve la cámara; streamRef: la señal de la cámara
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [activa, setActiva] = useState(false);
   const [error, setError] = useState(null);
 
+  // Apagar la cámara
   const detener = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -25,6 +31,7 @@ export function useWebcam() {
     setActiva(false);
   }, []);
 
+  // Pedir permiso y encender la cámara
   const iniciar = useCallback(async () => {
     setError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -55,12 +62,14 @@ export function useWebcam() {
     }
   }, [activa]);
 
+  // Tomar una foto del video actual (devuelve la imagen o null si la cámara no está lista)
   const capturar = useCallback(() => {
     const video = videoRef.current;
     if (!video || video.videoWidth === 0) return null;
     return canvasAJpeg(video, video.videoWidth, video.videoHeight);
   }, []);
 
+  // Apagar la cámara cuando el componente desaparece
   useEffect(() => detener, [detener]);
 
   return { videoRef, activa, error, iniciar, detener, capturar };

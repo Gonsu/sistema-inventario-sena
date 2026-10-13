@@ -1,18 +1,36 @@
+// Importar herramientas básicas de React
 import { useMemo, useState } from 'react';
-import { useCatalogo, useEvidencias } from '../../hooks/useInventarioData';
-import { descargarDataURL } from '../../utils/files';
-import { coincide, formatFecha } from '../../utils/format';
-import { EVIDENCIA_TIPO_LABEL } from '../../utils/labels';
-import { Modal } from '../ui/Modal';
-import { Badge, EmptyState, SearchInput } from '../ui/Primitives';
 
-export function EvidenciasAdminTable() {
+// Importar los datos del inventario (se actualizan solos cuando cambian)
+import { useCatalogo, useEvidencias } from '../../hooks/useInventarioData';
+
+// Importar utilidades para manejar archivos e imágenes
+import { descargarDataURL } from '../../utils/files';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { coincide, formatFecha } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { EVIDENCIA_TIPO_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import Modal from '../ui/Modal';
+import Badge from '../ui/Badge';
+import EmptyState from '../ui/EmptyState';
+import SearchInput from '../ui/SearchInput';
+
+// Tabla con las evidencias fotográficas que subieron los instructores.
+// Se puede buscar, filtrar por tipo y abrir cada foto en grande.
+function EvidenciasAdminTable() {
+  // Datos del inventario
   const evidencias = useEvidencias();
   const { itemPorId, nombreUsuario } = useCatalogo();
+  // Filtros y evidencia seleccionada para ver en detalle (null = ninguna)
   const [busqueda, setBusqueda] = useState('');
   const [tipo, setTipo] = useState('');
   const [detalle, setDetalle] = useState(null);
 
+  // Aplicar los filtros y ordenar de la más reciente a la más antigua
   const filtradas = useMemo(
     () =>
       evidencias
@@ -30,8 +48,10 @@ export function EvidenciasAdminTable() {
     [evidencias, tipo, busqueda, itemPorId, nombreUsuario],
   );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <div className="space-y-3">
+      {/* Título, buscador y filtro por tipo */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-lg">Evidencias Documentales</h3>
         <div className="flex flex-wrap gap-2">
@@ -59,6 +79,7 @@ export function EvidenciasAdminTable() {
         <EmptyState mensaje="No hay evidencias que coincidan." />
       ) : (
         <div className="max-h-96 overflow-auto rounded-input">
+          {/* Tabla de evidencias */}
           <table className="table-base">
             <thead>
               <tr>
@@ -94,6 +115,7 @@ export function EvidenciasAdminTable() {
         </div>
       )}
 
+      {/* Ventana con la foto en grande y sus datos */}
       <Modal
         abierto={!!detalle}
         titulo="Evidencia"
@@ -139,3 +161,5 @@ export function EvidenciasAdminTable() {
     </div>
   );
 }
+
+export default EvidenciasAdminTable;

@@ -1,11 +1,31 @@
+// Importar herramientas básicas de React
 import { useMemo, useState } from 'react';
-import { PRESUPUESTO_MAX_SOLICITUD } from '../../utils/constants';
-import { coincide, formatCOP, formatFecha } from '../../utils/format';
-import { TIPO_FORMACION_LABEL } from '../../utils/labels';
-import { Badge, EmptyState, SearchInput, SectionCard } from '../ui/Primitives';
 
-export function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
+// Importar constantes del sistema
+import { PRESUPUESTO_MAX_SOLICITUD } from '../../utils/constants';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { coincide, formatCOP, formatFecha } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { TIPO_FORMACION_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import Badge from '../ui/Badge';
+import EmptyState from '../ui/EmptyState';
+import SearchInput from '../ui/SearchInput';
+import SectionCard from '../ui/SectionCard';
+
+// Tabla con las solicitudes de materiales que esperan aprobación.
+// Recibe:
+//  - pendientes: lista de solicitudes en estado "pendiente"
+//  - onVer: función para abrir el detalle
+//  - onAceptar: función para aceptar la solicitud
+function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
+  // Texto que el usuario escribe en el buscador
   const [busqueda, setBusqueda] = useState('');
+  // Filtrar por nombre, apellido, programa o tipo de formación,
+  // y ordenar de la más antigua a la más reciente
   const filtradas = useMemo(
     () =>
       pendientes
@@ -22,6 +42,7 @@ export function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
     [pendientes, busqueda],
   );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <SectionCard
       titulo={`Solicitudes de Materiales de Instructores (${pendientes.length})`}
@@ -39,6 +60,7 @@ export function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
         <EmptyState mensaje={`Sin resultados para "${busqueda}"`} />
       ) : (
         <div className="max-h-[28rem] overflow-auto rounded-input">
+          {/* Tabla de solicitudes */}
           <table className="table-base">
             <thead>
               <tr>
@@ -55,6 +77,7 @@ export function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
             </thead>
             <tbody>
               {filtradas.map((s) => {
+                // Qué porcentaje del tope por solicitud se usó (si pasa del 90 % la etiqueta sale amarilla)
                 const uso = s.valorTotal / PRESUPUESTO_MAX_SOLICITUD;
                 return (
                   <tr key={s.id}>
@@ -72,6 +95,7 @@ export function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
                         {formatCOP(s.valorTotal)}
                       </Badge>
                     </td>
+                    {/* ¿Adjuntó el PDF del formato? */}
                     <td className="text-center">
                       {s.formatoPdf ? (
                         <span title={s.formatoPdf.nombre} className="text-lg text-green-700">
@@ -83,6 +107,7 @@ export function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
                     </td>
                     <td className="whitespace-nowrap text-xs">{formatFecha(s.creadaEn)}</td>
                     <td>
+                      {/* Botones de acción */}
                       <div className="flex justify-center gap-2">
                         <button className="btn-outline px-3 py-1" onClick={() => onVer(s)}>
                           Ver
@@ -102,3 +127,5 @@ export function SolicitudesPendientesTable({ pendientes, onVer, onAceptar }) {
     </SectionCard>
   );
 }
+
+export default SolicitudesPendientesTable;

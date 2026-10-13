@@ -1,18 +1,37 @@
+// Importar herramientas básicas de React
 import { useMemo, useState } from 'react';
-import { useCatalogo, useMovimientos, useSolicitudes } from '../../hooks/useInventarioData';
-import { coincide, formatCOP, formatFecha } from '../../utils/format';
-import { TIPO_FORMACION_LABEL } from '../../utils/labels';
-import { Badge, EmptyState, SearchInput, SectionCard } from '../ui/Primitives';
 
-export function HistorialAdmin() {
+// Importar los datos del inventario (se actualizan solos cuando cambian)
+import { useCatalogo, useMovimientos, useSolicitudes } from '../../hooks/useInventarioData';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { coincide, formatCOP, formatFecha } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { TIPO_FORMACION_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import Badge from '../ui/Badge';
+import EmptyState from '../ui/EmptyState';
+import SearchInput from '../ui/SearchInput';
+import SectionCard from '../ui/SectionCard';
+
+// Historial general para la administración, con dos pestañas:
+//  - Movimientos de Materiales: solicitudes aceptadas y lo que se entregó
+//  - Configuraciones Inventario: cambios hechos a los contratos
+function HistorialAdmin() {
+  // Pestaña activa y texto del buscador
   const [pestana, setPestana] = useState('materiales');
   const [busqueda, setBusqueda] = useState('');
+  // Datos del inventario
   const movimientos = useMovimientos();
   const solicitudes = useSolicitudes();
   const { itemPorId, contratoPorId, nombreUsuario } = useCatalogo();
 
+  // Índice para encontrar una solicitud por su id rápidamente
   const solicitudPorId = useMemo(() => new Map(solicitudes.map((s) => [s.id, s])), [solicitudes]);
 
+  // Pestaña 1: entregas de material (asignaciones que vienen de una solicitud)
   const salidas = useMemo(
     () =>
       movimientos
@@ -33,6 +52,7 @@ export function HistorialAdmin() {
     [movimientos, solicitudPorId, busqueda],
   );
 
+  // Pestaña 2: cambios en contratos y ajustes de inventario
   const configuraciones = useMemo(
     () =>
       movimientos
@@ -44,6 +64,7 @@ export function HistorialAdmin() {
     [movimientos, contratoPorId, busqueda],
   );
 
+  // Dibuja un botón de pestaña con su contador
   const tab = (id, label, n) => (
     <button
       role="tab"
@@ -55,6 +76,7 @@ export function HistorialAdmin() {
     </button>
   );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <SectionCard
       titulo="Historial de Movimientos"
@@ -62,11 +84,13 @@ export function HistorialAdmin() {
         <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar en el historial" />
       }
     >
+      {/* Botones de las pestañas */}
       <div role="tablist" className="mb-3 flex gap-1 border-b-2 border-sena-primary">
         {tab('materiales', 'Movimientos de Materiales', salidas.length)}
         {tab('configuraciones', 'Configuraciones Inventario', configuraciones.length)}
       </div>
 
+      {/* Contenido según la pestaña elegida */}
       {pestana === 'materiales' ? (
         salidas.length === 0 ? (
           <EmptyState mensaje="No hay solicitudes aceptadas todavía." />
@@ -145,3 +169,5 @@ export function HistorialAdmin() {
     </SectionCard>
   );
 }
+
+export default HistorialAdmin;

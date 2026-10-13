@@ -1,12 +1,15 @@
 // ============================================================
-// Capa de acceso a localStorage.
-// Toda escritura notifica a la pestaña actual (evento propio) para que
-// la UI responda sin esperar al siguiente ciclo de polling; las demás
-// pestañas se enteran por el polling de 2 s (y por el evento `storage`).
+// Funciones para leer y guardar datos en el localStorage del navegador.
+//
+// Cada vez que se guarda algo, se avisa a la pestaña actual con un evento
+// para que la pantalla se actualice al instante. Las demás pestañas se
+// enteran porque revisan el localStorage cada 2 segundos.
 // ============================================================
 
+// Nombre del evento que avisa a la pestaña actual que algo cambió
 export const STORAGE_CHANGE_EVENT = 'sena-storage-change';
 
+// Error que se lanza cuando el localStorage se llena (~5 MB)
 export class StorageQuotaError extends Error {
   constructor() {
     super(
@@ -16,6 +19,7 @@ export class StorageQuotaError extends Error {
   }
 }
 
+// Lee el texto guardado en una clave (o null si no existe)
 export function readRaw(key) {
   try {
     return localStorage.getItem(key);
@@ -24,6 +28,7 @@ export function readRaw(key) {
   }
 }
 
+// Convierte el texto en objeto; si está vacío o dañado devuelve el valor por defecto
 export function parseJSON(raw, fallback) {
   if (raw === null) return fallback;
   try {
@@ -33,10 +38,12 @@ export function parseJSON(raw, fallback) {
   }
 }
 
+// Lee una clave y la devuelve ya convertida en objeto
 export function readJSON(key, fallback) {
   return parseJSON(readRaw(key), fallback);
 }
 
+// ¿El error fue porque se llenó el almacenamiento?
 function isQuotaError(err) {
   return (
     err instanceof DOMException &&
@@ -44,6 +51,7 @@ function isQuotaError(err) {
   );
 }
 
+// Guarda un valor en una clave y avisa a la pantalla que cambió
 export function writeJSON(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -54,10 +62,9 @@ export function writeJSON(key, value) {
   window.dispatchEvent(new CustomEvent(STORAGE_CHANGE_EVENT, { detail: { key } }));
 }
 
-/**
- * Escribe varias claves como una sola operación: si alguna falla por cuota,
- * restaura los valores previos para no dejar el estado a medias.
- */
+// Guarda varias claves de una sola vez.
+// Si alguna falla (por ejemplo, porque se llenó el espacio), deja todo como estaba
+// para que los datos no queden a medias.
 export function writeMany(entries) {
   const previous = entries.map(([key]) => [key, readRaw(key)]);
   try {
@@ -75,6 +82,7 @@ export function writeMany(entries) {
   }
 }
 
+// Borra una clave y avisa a la pantalla
 export function removeKey(key) {
   localStorage.removeItem(key);
   window.dispatchEvent(new CustomEvent(STORAGE_CHANGE_EVENT, { detail: { key } }));

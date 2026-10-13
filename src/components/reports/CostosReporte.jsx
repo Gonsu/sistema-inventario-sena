@@ -1,13 +1,30 @@
+// Importar funciones de formato (pesos, fechas) y búsqueda
 import { formatCOP } from '../../utils/format';
-import { COORDINACION_LABEL } from '../../utils/labels';
-import { EmptyState, MetricCard, SearchInput, SectionCard } from '../ui/Primitives';
-import { ContratoBadge, FiltroContratoSelect, FiltroCoordinacionSelect } from './Controles';
 
-export function CostosReporte({ filtros, onFiltros, filas, anio, ejecutado, proyeccion }) {
+// Importar los textos que se muestran para cada valor
+import { COORDINACION_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import EmptyState from '../ui/EmptyState';
+import MetricCard from '../ui/MetricCard';
+import SearchInput from '../ui/SearchInput';
+import SectionCard from '../ui/SectionCard';
+
+// Importar componentes de esta misma sección
+import ContratoBadge from './ContratoBadge';
+import FiltroContratoSelect from './FiltroContratoSelect';
+import FiltroCoordinacionSelect from './FiltroCoordinacionSelect';
+
+// Reporte de costos: lista de materiales con su costo, filtros y tarjetas de totales.
+// Los datos ya llegan calculados desde la vista Reportes.
+function CostosReporte({ filtros, onFiltros, filas, anio, ejecutado, proyeccion }) {
+  // Suma del costo de todos los materiales mostrados
   const costoTotal = filas.reduce((acc, f) => acc + f.costoMayor, 0);
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <SectionCard titulo="Reporte de Costos">
+      {/* Filtros */}
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <FiltroContratoSelect
           valor={filtros.contrato}
@@ -64,6 +81,7 @@ export function CostosReporte({ filtros, onFiltros, filas, anio, ejecutado, proy
         </div>
       )}
 
+      {/* Tarjetas de totales */}
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <MetricCard etiqueta="Total de ítems mostrados" valor={filas.length} />
         <MetricCard
@@ -82,3 +100,5 @@ export function CostosReporte({ filtros, onFiltros, filas, anio, ejecutado, proy
     </SectionCard>
   );
 }
+
+export default CostosReporte;

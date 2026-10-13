@@ -1,16 +1,30 @@
+// Importar íconos
 import { CheckCircle2, Clock } from 'lucide-react';
-import { formatFecha } from '../../utils/format';
-import { COORDINACION_LABEL } from '../../utils/labels';
-import { EmptyState, SectionCard } from '../ui/Primitives';
-import { ContratoBadge, FiltroContratoSelect, FiltroCoordinacionSelect } from './Controles';
 
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { formatFecha } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { COORDINACION_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import EmptyState from '../ui/EmptyState';
+import SectionCard from '../ui/SectionCard';
+
+// Importar componentes de esta misma sección
+import ContratoBadge from './ContratoBadge';
+import FiltroContratoSelect from './FiltroContratoSelect';
+import FiltroCoordinacionSelect from './FiltroCoordinacionSelect';
+
+// Opciones del filtro por estado
 const ESTADOS = [
   { valor: '', label: 'Todos' },
   { valor: 'entregado', label: 'Entregado' },
   { valor: 'pendiente', label: 'Pendiente' },
 ];
 
-export function EstadoEntregaTag({ estado }) {
+// Etiqueta verde "Entregado" o roja "Pendiente"
+function EstadoEntregaTag({ estado }) {
   return estado === 'entregado' ? (
     <span className="inline-flex items-center gap-1 font-semibold text-green-700">
       <CheckCircle2 className="h-4 w-4" aria-hidden /> Entregado
@@ -22,10 +36,15 @@ export function EstadoEntregaTag({ estado }) {
   );
 }
 
-export function EntregasReporte({ filtros, onFiltros, todas, filas }) {
+// Reporte de entregas: muestra qué materiales solicitados ya se entregaron y cuáles no.
+// todas: filas sin el filtro de estado (para los contadores)
+// filas: filas con todos los filtros aplicados (para la tabla)
+function EntregasReporte({ filtros, onFiltros, todas, filas }) {
+  // Contadores de entregados y pendientes
   const entregados = todas.filter((f) => f.estado === 'entregado').length;
   const pendientes = todas.length - entregados;
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <SectionCard
       titulo="Estado de Entregas de Productos"
@@ -40,6 +59,7 @@ export function EntregasReporte({ filtros, onFiltros, todas, filas }) {
         </div>
       }
     >
+      {/* Filtros */}
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <FiltroContratoSelect
           valor={filtros.contrato}
@@ -117,3 +137,5 @@ export function EntregasReporte({ filtros, onFiltros, todas, filas }) {
     </SectionCard>
   );
 }
+
+export default EntregasReporte;

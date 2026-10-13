@@ -1,17 +1,33 @@
+// Importar herramientas básicas de React
 import { useEffect, useState } from 'react';
-import { exportarSolicitudPDF, exportarSolicitudXLSX } from '../../utils/exportar';
-import { descargarDataURL } from '../../utils/files';
-import { formatCOP } from '../../utils/format';
-import { ESTADO_SOLICITUD_LABEL, TIPO_FORMACION_LABEL } from '../../utils/labels';
-import { FormatoEncabezado } from '../ui/FormatoEncabezado';
-import { Modal } from '../ui/Modal';
-import { Alerta } from '../ui/Primitives';
 
-export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAceptar }) {
+// Importar las funciones para exportar a PDF y Excel
+import { exportarSolicitudPDF, exportarSolicitudXLSX } from '../../utils/exportar';
+
+// Importar utilidades para manejar archivos e imágenes
+import { descargarDataURL } from '../../utils/files';
+
+// Importar funciones de formato (pesos, fechas) y búsqueda
+import { formatCOP } from '../../utils/format';
+
+// Importar los textos que se muestran para cada valor
+import { ESTADO_SOLICITUD_LABEL, TIPO_FORMACION_LABEL } from '../../utils/labels';
+
+// Importar componentes visuales reutilizables
+import FormatoEncabezado from '../ui/FormatoEncabezado';
+import Modal from '../ui/Modal';
+import Alerta from '../ui/Alerta';
+
+// Ventana con el detalle completo de una solicitud:
+// datos del instructor, materiales pedidos, valor total y vista previa del PDF adjunto.
+// También permite exportarla a PDF o Excel y aceptarla si está pendiente.
+function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAceptar }) {
+  // Estados: mensaje de error, si se está exportando y la dirección del PDF para la vista previa
   const [error, setError] = useState(null);
   const [exportando, setExportando] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
 
+  // Convertir el PDF guardado en un enlace temporal para poder mostrarlo:
   // Chrome no siempre muestra PDFs "data:" embebidos; un Blob URL es más confiable.
   const pdfData = solicitud?.formatoPdf.data;
   useEffect(() => {
@@ -33,6 +49,7 @@ export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAcepta
     };
   }, [pdfData]);
 
+  // Exporta la solicitud usando la función que se le pase (PDF o Excel)
   const exportar = async (fn) => {
     if (!solicitud) return;
     setError(null);
@@ -46,6 +63,7 @@ export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAcepta
     }
   };
 
+  // Atajo para los datos del formulario
   const f = solicitud?.formulario;
   return (
     <Modal
@@ -53,6 +71,7 @@ export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAcepta
       titulo={`Solicitud ${solicitud?.numero ?? ''}`}
       onCerrar={onCerrar}
       ancho="xl"
+      // Botones de la parte de abajo
       pie={
         solicitud && (
           <>
@@ -89,7 +108,9 @@ export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAcepta
     >
       {solicitud && f && (
         <div className="space-y-4">
+          {/* Encabezado oficial del formato */}
           <FormatoEncabezado numero={solicitud.numero} fecha={solicitud.creadaEn} />
+          {/* Datos del instructor y de la formación */}
           <dl className="grid gap-3 rounded-input bg-white p-4 font-data text-sm sm:grid-cols-2">
             <div>
               <dt className="label">Nombre</dt>
@@ -114,6 +135,7 @@ export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAcepta
               <dd>{ESTADO_SOLICITUD_LABEL[solicitud.estado]}</dd>
             </div>
           </dl>
+          {/* Materiales solicitados con sus valores */}
           <table className="table-base">
             <thead>
               <tr>
@@ -148,6 +170,7 @@ export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAcepta
             </tfoot>
           </table>
           <div>
+            {/* Vista previa del PDF adjunto */}
             <p className="label">Formato adjunto</p>
             <object
               data={pdfUrl ?? undefined}
@@ -159,9 +182,12 @@ export function SolicitudDetalleModal({ solicitud, itemPorId, onCerrar, onAcepta
               </p>
             </object>
           </div>
+          {/* Error al exportar */}
           {error && <Alerta>{error}</Alerta>}
         </div>
       )}
     </Modal>
   );
 }
+
+export default SolicitudDetalleModal;

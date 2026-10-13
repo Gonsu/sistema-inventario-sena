@@ -1,0 +1,10 @@
+/* Estilos generales de la página: fondo, tipografía y títulos.
+   @layer base le dice a Tailwind que estas reglas son la base de todo el sitio. */
+@layer base {
+  body {
+    @apply bg-sena-bg font-data text-gray-800 antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-title font-bold text-sena-header;
+  }
+}

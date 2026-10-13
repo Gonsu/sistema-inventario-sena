@@ -1,13 +1,25 @@
+// Importar herramientas básicas de React
 import { useEffect, useMemo, useState } from 'react';
-import { useCatalogo } from '../../hooks/useInventarioData';
-import { calcularTotal, crearSolicitud } from '../../services/inventario';
-import { PRESUPUESTO_MAX_SOLICITUD } from '../../utils/constants';
-import { Modal } from '../ui/Modal';
-import { Alerta } from '../ui/Primitives';
-import { FormularioSena } from './FormularioSena';
-import { PresupuestoBar } from './PresupuestoBar';
-import { SeleccionMateriales } from './SeleccionMateriales';
 
+// Importar los datos del inventario (se actualizan solos cuando cambian)
+import { useCatalogo } from '../../hooks/useInventarioData';
+
+// Importar las reglas de negocio del inventario
+import { calcularTotal, crearSolicitud } from '../../services/inventario';
+
+// Importar constantes del sistema
+import { PRESUPUESTO_MAX_SOLICITUD } from '../../utils/constants';
+
+// Importar componentes visuales reutilizables
+import Modal from '../ui/Modal';
+import Alerta from '../ui/Alerta';
+
+// Importar componentes de esta misma sección
+import FormularioSena from './FormularioSena';
+import PresupuestoBar from './PresupuestoBar';
+import SeleccionMateriales from './SeleccionMateriales';
+
+// Datos iniciales del formulario: se toma el nombre del usuario y se separa en nombre y apellido
 function formularioInicial(usuario) {
   const [nombre = '', ...resto] = usuario.nombre.split(' ');
   return {
@@ -18,8 +30,18 @@ function formularioInicial(usuario) {
   };
 }
 
-export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }) {
+// Ventana para hacer una nueva solicitud de materiales. Tiene dos pasos:
+//  1. Elegir los materiales y cantidades (SeleccionMateriales)
+//  2. Llenar el formato SENA y adjuntar el PDF (FormularioSena)
+function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }) {
+  // Catálogo de materiales y contratos
   const { items, contratos, itemPorId } = useCatalogo();
+  // Estados de la ventana:
+  //  - fase: paso actual (1 o 2)
+  //  - seleccion: materiales elegidos { id: cantidad }
+  //  - formulario: datos del formato SENA
+  //  - pdf: archivo adjunto
+  //  - numero y fecha: identificación de la solicitud
   const [fase, setFase] = useState(1);
   const [seleccion, setSeleccion] = useState({});
   const [formulario, setFormulario] = useState(() => formularioInicial(usuario));
@@ -29,6 +51,7 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
   const [fecha, setFecha] = useState('');
   const [enviando, setEnviando] = useState(false);
 
+  // Deja la ventana como nueva
   const limpiar = () => {
     setFase(1);
     setSeleccion({});
@@ -38,6 +61,7 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
     setEnviando(false);
   };
 
+  // Cada vez que se abre: limpiar y generar un número de solicitud nuevo
   useEffect(() => {
     if (abierto) {
       limpiar();
@@ -47,6 +71,7 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
     }
   }, [abierto]);
 
+  // Convertir la selección en una lista de { material, cantidad }
   const lineas = useMemo(
     () =>
       Object.entries(seleccion).flatMap(([itemId, cantidad]) => {
@@ -55,6 +80,7 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
       }),
     [seleccion, itemPorId],
   );
+  // Valor total de la solicitud y si se pasa del tope
   const total = calcularTotal(
     lineas.map(({ item, cantidad }) => ({
       cantidad,
@@ -63,6 +89,7 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
   );
   const excedido = total > PRESUPUESTO_MAX_SOLICITUD;
 
+  // Crear la solicitud y avisar al usuario
   const enviar = () => {
     setEnviando(true);
     try {
@@ -79,12 +106,14 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
       onExito(`Solicitud ${solicitud.numero} enviada. Queda pendiente de aprobación.`);
       limpiar();
       onCerrar();
+      // Si algo no es válido, mostrar el error
     } catch (e) {
       setError(e.message);
       setEnviando(false);
     }
   };
 
+  // Botones de abajo: cambian según el paso en el que esté el usuario
   const pie =
     fase === 1 ? (
       <>
@@ -124,6 +153,7 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
       </>
     );
 
+  // Todo componente de React debe retornar un solo contenedor padre
   return (
     <Modal
       abierto={abierto}
@@ -135,6 +165,7 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
       pie={pie}
     >
       <div className="space-y-4">
+        {/* Barra de presupuesto (se ve en los dos pasos) */}
         <PresupuestoBar total={total} />
         {fase === 1 ? (
           <SeleccionMateriales
@@ -156,8 +187,11 @@ export function SolicitudMaterialesModal({ abierto, onCerrar, usuario, onExito }
             onError={setError}
           />
         )}
+        {/* Mensaje de error */}
         {error && <Alerta>{error}</Alerta>}
       </div>
     </Modal>
   );
 }
+
+export default SolicitudMaterialesModal;
